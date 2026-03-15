@@ -1,0 +1,15 @@
+export { HeroSection } from "./HeroSection";
+export { StatCards } from "./StatCards";
+export { FeaturedExperts } from "./FeaturedExperts";
+export { HowItWorks } from "./HowItWorks";
+export { SpecializationAreas } from "./SpecializationAreas";
+export { WhyChooseUs } from "./WhyChooseUs";
+export { FAQSection } from "./FAQSection";
+export { CTABanner } from "./CTABanner";
+export { PlatformFeatures } from "./PlatformFeatures";
+export { ExpertRegistrationCTA } from "./ExpertRegistrationCTA";
+export { PsychologicalTestsPreview } from "./PsychologicalTestsPreview";
+export { ExpertQualityProcess } from "./ExpertQualityProcess";
+export { BlogSection } from "./BlogSection";
+export { OnlineTherapyInfo } from "./OnlineTherapyInfo";
+export { PopularQuestions } from "./PopularQuestions";

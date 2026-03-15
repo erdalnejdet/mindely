@@ -31,7 +31,6 @@ Frontend:
 * TypeScript
 * Tailwind CSS
 * shadcn/ui
-* Framer Motion
 * React Hook Form
 * Zustand
 * TanStack Query
