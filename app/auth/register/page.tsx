@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Leaf, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { apiFetch, getApiUrl } from "@/lib/api";
+import { setToken, setUser } from "@/lib/auth";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -36,15 +38,37 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement register
+    setError("");
+    if (password !== confirmPassword) {
+      setError("Şifreler eşleşmiyor");
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await apiFetch<{ token: string; user: { id: string; name: string; email: string; avatar?: string } }>(
+        "/api/auth/register",
+        {
+          method: "POST",
+          body: JSON.stringify({ name, email, password }),
+        }
+      );
+      setToken(data.token);
+      setUser(data.user);
+      window.location.href = "/";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Kayıt başarısız");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleRegister = () => {
-    // TODO: Implement Google OAuth - signIn("google")
-    window.location.href = "/api/auth/signin/google";
+    window.location.href = getApiUrl("/api/auth/google");
   };
 
   return (
@@ -120,6 +144,12 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+              {error}
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="name">Ad Soyad</Label>
@@ -189,9 +219,10 @@ export default function RegisterPage() {
 
             <Button
               type="submit"
+              disabled={loading}
               className="h-12 w-full rounded-xl bg-primary text-base font-medium hover:bg-primary/90"
             >
-              Kayıt Ol
+              {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </form>

@@ -3,7 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Leaf, Mail, Lock, ArrowRight } from "lucide-react";
+import { Leaf, Mail, Lock, ArrowRight, X } from "lucide-react";
+import { apiFetch, getApiUrl } from "@/lib/api";
+import { setToken, setUser } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -27,22 +32,67 @@ function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotError, setForgotError] = useState("");
+  const [forgotSuccess, setForgotSuccess] = useState(false);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement login
+    setError("");
+    setLoading(true);
+    try {
+      const data = await apiFetch<{ token: string; user: { id: string; name: string; email: string; avatar?: string } }>(
+        "/api/auth/login",
+        {
+          method: "POST",
+          body: JSON.stringify({ email, password }),
+        }
+      );
+      setToken(data.token);
+      setUser(data.user);
+      window.location.href = "/";
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Giriş başarısız");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleGoogleLogin = () => {
-    // TODO: Implement Google OAuth - signIn("google")
-    window.location.href = "/api/auth/signin/google";
+    window.location.href = getApiUrl("/api/auth/google");
+  };
+
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotError("");
+    setForgotSuccess(false);
+    setForgotLoading(true);
+    try {
+      await apiFetch("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify({ email: forgotEmail }),
+      });
+      setForgotSuccess(true);
+    } catch (err) {
+      setForgotError(err instanceof Error ? err.message : "Bir hata oluştu");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const closeForgotModal = () => {
+    setForgotPasswordOpen(false);
+    setForgotEmail("");
+    setForgotError("");
+    setForgotSuccess(false);
   };
 
   return (
@@ -84,6 +134,12 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 rounded-lg p-3">
+              {error}
+            </p>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="email">E-posta</Label>
@@ -104,12 +160,13 @@ export default function LoginPage() {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Şifre</Label>
-                <Link
-                  href="/auth/forgot-password"
+                <button
+                  type="button"
+                  onClick={() => setForgotPasswordOpen(true)}
                   className="text-sm text-primary hover:underline"
                 >
                   Şifremi unuttum
-                </Link>
+                </button>
               </div>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
@@ -127,9 +184,10 @@ export default function LoginPage() {
 
             <Button
               type="submit"
+              disabled={loading}
               className="h-12 w-full rounded-xl bg-primary text-base font-medium hover:bg-primary/90"
             >
-              Giriş Yap
+              {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </form>
@@ -169,6 +227,83 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Şifremi unuttum modal */}
+      {forgotPasswordOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={closeForgotModal}
+          role="presentation"
+        >
+          <div
+            className="w-full max-w-md rounded-2xl bg-background p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+            role="presentation"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-bold">Şifremi unuttum</h2>
+              <button
+                type="button"
+                onClick={closeForgotModal}
+                className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
+                aria-label="Kapat"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {forgotSuccess ? (
+              <div className="space-y-4">
+                <p className="text-muted-foreground">
+                  Şifre sıfırlama bağlantısı <strong>{forgotEmail}</strong> adresine gönderildi.
+                  Lütfen e-postanızı kontrol edin.
+                </p>
+                <Button onClick={closeForgotModal} className="w-full">
+                  Tamam
+                </Button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
+                </p>
+                <div className="space-y-2">
+                  <Label htmlFor="forgot-email">E-posta</Label>
+                  <Input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="ornek@email.com"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="h-12 rounded-xl"
+                    required
+                  />
+                </div>
+                {forgotError && (
+                  <p className="text-sm text-destructive">{forgotError}</p>
+                )}
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeForgotModal}
+                    className="flex-1"
+                  >
+                    İptal
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="flex-1"
+                  >
+                    {forgotLoading ? "Gönderiliyor..." : "Gönder"}
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

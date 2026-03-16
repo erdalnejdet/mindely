@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { Leaf, Menu } from "lucide-react";
+import { Leaf, Menu, LogOut, User } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getUser, logout } from "@/lib/auth";
 
 const navLinks = [
   { href: "/", label: "Anasayfa" },
@@ -16,9 +17,21 @@ const navLinks = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+
+  useEffect(() => {
+    queueMicrotask(() => setUser(getUser()));
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+    setMobileMenuOpen(false);
+    window.location.href = "/";
+  };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex items-center gap-2">
           <Leaf className="h-8 w-8 text-primary" />
@@ -38,18 +51,33 @@ export function Header() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          <Link
-            href="/auth/login"
-            className={cn(buttonVariants({ variant: "outline" }))}
-          >
-            Giriş Yap
-          </Link>
-          <Link
-            href="/auth/register"
-            className={cn(buttonVariants())}
-          >
-            Kayıt Ol
-          </Link>
+          {user ? (
+            <>
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <User className="h-4 w-4" />
+                {user.name}
+              </span>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Çıkış Yap
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link
+                href="/auth/login"
+                className={cn(buttonVariants({ variant: "outline" }))}
+              >
+                Giriş Yap
+              </Link>
+              <Link
+                href="/auth/register"
+                className={cn(buttonVariants())}
+              >
+                Kayıt Ol
+              </Link>
+            </>
+          )}
         </div>
 
         <Button
@@ -76,19 +104,39 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-              <div className="mt-4 flex gap-2">
-                <Link
-                  href="/auth/login"
-                  className={cn(buttonVariants({ variant: "outline" }), "flex-1 justify-center")}
-                >
-                  Giriş Yap
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className={cn(buttonVariants(), "flex-1 justify-center")}
-                >
-                  Kayıt Ol
-                </Link>
+              <div className="mt-4 flex flex-col gap-2">
+                {user ? (
+                  <>
+                    <p className="px-3 py-2 text-sm text-muted-foreground">
+                      {user.name}
+                    </p>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={handleLogout}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Çıkış Yap
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href="/auth/login"
+                      className={cn(buttonVariants({ variant: "outline" }), "flex-1 justify-center")}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Giriş Yap
+                    </Link>
+                    <Link
+                      href="/auth/register"
+                      className={cn(buttonVariants(), "flex-1 justify-center")}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Kayıt Ol
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
         </div>
