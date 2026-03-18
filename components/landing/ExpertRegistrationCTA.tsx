@@ -23,7 +23,7 @@ export function ExpertRegistrationCTA() {
               de bu topluluğun bir parçası olun!
             </p>
             <Link
-              href="/auth/register?type=expert"
+              href="/terapist-islemleri"
               className={cn(buttonVariants({ size: "lg" }), "mt-8 rounded-full px-8")}
             >
               Uzman Olarak Kayıt Ol
