@@ -11,14 +11,18 @@ function AuthCallbackContent() {
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
 
   useEffect(() => {
-    const token = searchParams.get("token");
+    const access = searchParams.get("access");
+    const token = searchParams.get("token") || access;
     const userParam = searchParams.get("user");
 
     if (token && userParam) {
       try {
         const user = JSON.parse(decodeURIComponent(userParam));
         setToken(token);
-        setUser(user);
+        setUser({
+          ...user,
+          name: [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email,
+        });
         setStatus("success");
         window.location.href = "/";
       } catch {

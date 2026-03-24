@@ -1,32 +1,18 @@
 import { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { TerapistKayitForm } from "@/components/terapist/TerapistKayitForm";
-import { getPackageById } from "@/lib/data/packages";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/lib/button-variants";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
-  title: "Uzman Kayıt",
+  title: "Terapist Üyeliği",
   description:
-    "Mindely platformunda uzman olarak kayıt olun. Bilgilerinizi girin ve aboneliğe başlayın.",
+    "Mindely'de terapist olarak üye olun. Temel bilgilerinizi girerek başlayın.",
 };
 
-export default async function TerapistKayitPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ paket?: string }>;
-}) {
-  const params = await searchParams;
-  const paketId = params.paket || "6-ay";
-  const selectedPackage = getPackageById(paketId);
-
-  if (!selectedPackage) {
-    redirect("/terapist-islemleri");
-  }
-
+export default function TerapistKayitPage() {
   return (
     <PageLayout>
       <div className="bg-emerald-50/30 py-12 sm:py-16">
@@ -36,28 +22,21 @@ export default async function TerapistKayitPage({
             className={cn(buttonVariants({ variant: "ghost" }), "mb-8")}
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Paket Seçimine Dön
+            Terapist İşlemleri
           </Link>
 
           <div className="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
-            <div className="mb-8 rounded-xl bg-primary/5 border border-primary/20 p-4">
-              <p className="text-sm text-muted-foreground">Seçili paket</p>
-              <p className="text-lg font-bold text-primary">
-                {selectedPackage.name} - {selectedPackage.price}/ay
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {selectedPackage.duration} taahhüt
-              </p>
-            </div>
-
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              Uzman Bilgileriniz
+              Üye Ol
             </h1>
             <p className="mt-2 text-muted-foreground">
-              Platformda görünecek bilgilerinizi girin.
+              Temel bilgilerinizi girerek terapist üyeliğinizi oluşturun. Profil
+              ve paket seçimini sonradan tamamlayabilirsiniz.
             </p>
 
-            <TerapistKayitForm selectedPackageId={selectedPackage.id} />
+            <div className="mt-8">
+              <TerapistKayitForm />
+            </div>
           </div>
         </div>
       </div>

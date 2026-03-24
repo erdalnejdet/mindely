@@ -5,24 +5,26 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Button } from "@/components/ui/button";
-import { Check, Mail, Calendar, ArrowRight } from "lucide-react";
-import { getPackageById } from "@/lib/data/packages";
+import { Check, Mail, User, ArrowRight } from "lucide-react";
+import { TERAPIST_UYELIK_STORAGE_KEY } from "@/components/terapist/TerapistKayitForm";
 
-const ODEME_STORAGE_KEY = "mindely_terapist_odeme";
-
-type OdemeData = {
-  paketId: string;
-  kayit: Record<string, unknown>;
-  odemeTarihi: string;
-  durum: string;
+type UyeData = {
+  ad: string;
+  soyad: string;
+  email: string;
+  telefon: string;
+  adres: string;
+  dogumTarihi: string;
+  cinsiyet: string;
+  kayitTarihi?: string;
 } | null;
 
-function getInitialOdemeData(): OdemeData {
+function getInitialUyeData(): UyeData {
   if (typeof window === "undefined") return null;
   try {
-    const stored = sessionStorage.getItem(ODEME_STORAGE_KEY);
+    const stored = sessionStorage.getItem(TERAPIST_UYELIK_STORAGE_KEY);
     if (!stored) return null;
-    return JSON.parse(stored) as OdemeData;
+    return JSON.parse(stored) as UyeData;
   } catch {
     return null;
   }
@@ -30,22 +32,17 @@ function getInitialOdemeData(): OdemeData {
 
 export default function OnayPage() {
   const router = useRouter();
-  const [odemeData] = useState<OdemeData>(getInitialOdemeData);
+  const [uyeData] = useState<UyeData>(getInitialUyeData);
 
   useEffect(() => {
-    if (odemeData) {
-      sessionStorage.removeItem(ODEME_STORAGE_KEY);
+    if (uyeData) {
+      sessionStorage.removeItem(TERAPIST_UYELIK_STORAGE_KEY);
     } else {
       router.replace("/terapist-islemleri");
     }
-  }, [odemeData, router]);
+  }, [uyeData, router]);
 
-  const packageData = odemeData?.paketId
-    ? getPackageById(odemeData.paketId)
-    : null;
-  const kayit = odemeData?.kayit as { formData?: { email?: string } } | undefined;
-
-  if (!odemeData) {
+  if (!uyeData) {
     return (
       <PageLayout>
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -63,47 +60,45 @@ export default function OnayPage() {
             <Check className="h-10 w-10 text-emerald-600" />
           </div>
           <h1 className="text-3xl font-bold text-foreground sm:text-4xl">
-            Aboneliğiniz Onaylandı!
+            Kaydınız Alındı
           </h1>
           <p className="mt-4 text-lg text-muted-foreground">
-            Mindely ailesine hoş geldiniz. Hesabınız aktifleştiriliyor.
+            Mindely terapist üyeliğiniz için teşekkürler. Bilgileriniz
+            kaydedildi.
           </p>
 
           <div className="mt-12 rounded-2xl bg-white p-8 shadow-lg text-left">
-            <h2 className="font-semibold text-foreground mb-6">
-              Kayıt Özeti
-            </h2>
+            <h2 className="font-semibold text-foreground mb-6">Özet</h2>
 
             <div className="space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <User className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Ad Soyad</p>
+                  <p className="font-medium">
+                    {uyeData.ad} {uyeData.soyad}
+                  </p>
+                </div>
+              </div>
+
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
                   <Mail className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">E-posta</p>
-                  <p className="font-medium">{kayit?.formData?.email}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <Calendar className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Paket</p>
-                  <p className="font-medium">
-                    {packageData?.name} - ₺{packageData?.price}/ay
-                  </p>
+                  <p className="font-medium">{uyeData.email}</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-8 rounded-xl bg-emerald-50 border border-emerald-200 p-4">
               <p className="text-sm text-emerald-800">
-                <strong>Sonraki adım:</strong> E-posta adresinize gönderilen
-                aktivasyon linkine tıklayarak profil oluşturma sürecini
-                tamamlayın. 24 saat içinde profiliniz incelenecek ve onay
-                sonrası platformda görünür olacaksınız.
+                <strong>Sonraki adım:</strong> Hesabınız hazır olduğunda
+                e-posta ile bilgilendirileceksiniz. Uzman profilinizi ve
+                abonelik tercihinizi panelden tamamlayabilirsiniz.
               </p>
             </div>
           </div>
