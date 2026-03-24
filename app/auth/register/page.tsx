@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Leaf, Mail, Lock, User, ArrowRight } from "lucide-react";
-import { apiFetch, getApiUrl } from "@/lib/api";
-import { setToken, setUser } from "@/lib/auth";
+import { apiAuth, getApiUrl } from "@/lib/api";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -34,12 +33,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,16 +51,16 @@ export default function RegisterPage() {
     }
     setLoading(true);
     try {
-      const data = await apiFetch<{ token: string; user: { id: string; name: string; email: string; avatar?: string } }>(
-        "/api/auth/register",
-        {
-          method: "POST",
-          body: JSON.stringify({ name, email, password }),
-        }
-      );
-      setToken(data.token);
-      setUser(data.user);
-      window.location.href = "/";
+      await apiAuth("/auth/register", {
+        method: "POST",
+        body: JSON.stringify({
+          first_name: firstName.trim(),
+          last_name: lastName.trim(),
+          email: email.trim(),
+          password,
+        }),
+      });
+      setRegistered(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kayıt başarısız");
     } finally {
@@ -68,7 +69,7 @@ export default function RegisterPage() {
   };
 
   const handleGoogleRegister = () => {
-    window.location.href = getApiUrl("/api/auth/google");
+    window.location.href = getApiUrl("/api/v1/auth/google");
   };
 
   return (
@@ -150,20 +151,47 @@ export default function RegisterPage() {
             </p>
           )}
 
+          {registered ? (
+            <div className="space-y-4 rounded-lg bg-primary/10 p-4">
+              <p className="text-sm text-foreground">
+                Kayıt başarılı! E-posta adresinize doğrulama linki gönderildi. Giriş yapmak için e-postanızı doğrulayın.
+              </p>
+              <Link href="/auth/login" className="block">
+                <Button className="w-full">Giriş sayfasına git</Button>
+              </Link>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="name">Ad Soyad</Label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="name"
-                  type="text"
-                  placeholder="Adınız Soyadınız"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="h-12 rounded-xl pl-12"
-                  required
-                />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">Ad</Label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="firstName"
+                    type="text"
+                    placeholder="Adınız"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="h-12 rounded-xl pl-12"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Soyad</Label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    id="lastName"
+                    type="text"
+                    placeholder="Soyadınız"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="h-12 rounded-xl pl-12"
+                    required
+                  />
+                </div>
               </div>
             </div>
 
@@ -226,6 +254,7 @@ export default function RegisterPage() {
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </form>
+          )}
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Zaten hesabınız var mı?{" "}

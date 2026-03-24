@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Leaf, Mail, Lock, ArrowRight, X } from "lucide-react";
-import { apiFetch, getApiUrl } from "@/lib/api";
+import { apiAuth, apiFetch, getApiUrl } from "@/lib/api";
 import { setToken, setUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,15 +49,15 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      const data = await apiFetch<{ token: string; user: { id: string; name: string; email: string; avatar?: string } }>(
-        "/api/auth/login",
+      const data = await apiAuth<{ user: { uuid: string; email: string; first_name: string; last_name: string }; tokens: { access: string; refresh: string } }>(
+        "/auth/login",
         {
           method: "POST",
           body: JSON.stringify({ email, password }),
         }
       );
-      setToken(data.token);
-      setUser(data.user);
+      setToken(data.tokens.access);
+      setUser({ ...data.user, name: `${data.user.first_name} ${data.user.last_name}`.trim() });
       window.location.href = "/";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Giriş başarısız");
@@ -67,7 +67,7 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = getApiUrl("/api/auth/google");
+    window.location.href = getApiUrl("/api/v1/auth/google");
   };
 
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
@@ -76,7 +76,7 @@ export default function LoginPage() {
     setForgotSuccess(false);
     setForgotLoading(true);
     try {
-      await apiFetch("/api/auth/forgot-password", {
+      await apiAuth("/auth/forgot-password", {
         method: "POST",
         body: JSON.stringify({ email: forgotEmail }),
       });

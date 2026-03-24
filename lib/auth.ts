@@ -62,8 +62,11 @@ export function getUser() {
 }
 
 export function setUser(user: {
-  id: string;
-  name: string;
+  uuid?: string;
+  id?: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
   avatar?: string;
 }) {
