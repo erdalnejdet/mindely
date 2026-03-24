@@ -8,7 +8,8 @@ import {
   BarChart3,
   UserCircle,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/lib/button-variants";
+import { cn } from "@/lib/utils";
 
 export default function ExpertDashboardPage() {
   return (
@@ -22,12 +23,16 @@ export default function ExpertDashboardPage() {
             Randevularınızı takip edin; profil ve CV’nizi güncel tutun.
           </p>
         </div>
-        <Button asChild className="rounded-xl shrink-0">
-          <Link href="/dashboard/expert/profile">
-            <UserCircle className="mr-2 h-4 w-4" />
-            Profil & CV
-          </Link>
-        </Button>
+        <Link
+          href="/dashboard/expert/profile"
+          className={cn(
+            buttonVariants(),
+            "inline-flex shrink-0 items-center justify-center rounded-xl"
+          )}
+        >
+          <UserCircle className="mr-2 h-4 w-4" />
+          Profil & CV
+        </Link>
       </div>
 
       <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
