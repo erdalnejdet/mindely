@@ -20,7 +20,7 @@ export function CTABanner() {
             </p>
             <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Link
-                href="/experts"
+                href="/psikologlar"
                 className={cn(buttonVariants({ size: "lg" }), "rounded-full px-8")}
               >
                 Uygun Uzmanı Bul

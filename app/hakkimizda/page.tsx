@@ -78,7 +78,7 @@ export default function AboutPage() {
               herkes için erişilebilir kılmak.
             </p>
             <Link
-              href="/experts"
+              href="/psikologlar"
               className={buttonVariants({ size: "lg" })}
             >
               Uzmanlarımızı Keşfedin

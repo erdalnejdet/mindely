@@ -1,7 +1,6 @@
 "use client";
 
 import { MapPin, MessageCircle, ClipboardCheck, BarChart3 } from "lucide-react";
-import Link from "next/link";
 
 const features = [
   {

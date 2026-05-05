@@ -44,7 +44,7 @@ export function SpecializationAreas() {
           {specializations.map((spec) => (
             <Link
               key={spec.label}
-              href={`/experts?specialization=${spec.label.toLowerCase().replace(/\s/g, "-")}`}
+              href={`/psikologlar?specialization=${spec.label.toLowerCase().replace(/\s/g, "-")}`}
               className="group flex flex-col items-center gap-3 rounded-2xl bg-muted/50 p-6 shadow-sm transition-all hover:bg-muted hover:shadow-md"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">

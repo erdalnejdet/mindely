@@ -9,7 +9,7 @@ import { getUser, logout } from "@/lib/auth";
 
 const navLinks = [
   { href: "/", label: "Anasayfa" },
-  { href: "/experts", label: "Uzmanlar" },
+  { href: "/psikologlar", label: "Psikologlar" },
   { href: "#uzmanlik-alanlari", label: "Uzmanlık Alanları" },
   { href: "/tests", label: "Psikolojik Testler" },
   { href: "#blog", label: "Blog" },

@@ -1,12 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { tr } from "date-fns/locale";
+import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 
 export const TERAPIST_UYELIK_STORAGE_KEY = "mindely_terapist_uyelik";
 
@@ -21,6 +25,8 @@ const CINSIYET_OPTIONS = [
 export function TerapistKayitForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const calendarWrapperRef = useRef<HTMLDivElement>(null);
   const [formData, setFormData] = useState({
     ad: "",
     soyad: "",
@@ -47,6 +53,20 @@ export function TerapistKayitForm() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!calendarWrapperRef.current) return;
+      if (!calendarWrapperRef.current.contains(event.target as Node)) {
+        setCalendarOpen(false);
+      }
+    };
+
+    if (calendarOpen) {
+      window.addEventListener("mousedown", onPointerDown);
+    }
+    return () => window.removeEventListener("mousedown", onPointerDown);
+  }, [calendarOpen]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -103,16 +123,41 @@ export function TerapistKayitForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="dogumTarihi">Doğum tarihi</Label>
-          <Input
-            id="dogumTarihi"
-            type="date"
-            value={formData.dogumTarihi}
-            onChange={(e) =>
-              setFormData({ ...formData, dogumTarihi: e.target.value })
-            }
-            className="h-12 rounded-xl"
-            required
-          />
+          <div className="relative" ref={calendarWrapperRef}>
+            <button
+              id="dogumTarihi"
+              type="button"
+              onClick={() => setCalendarOpen((prev) => !prev)}
+              className={cn(
+                "h-12 w-full rounded-xl border border-input bg-background px-4 text-left text-sm",
+                "flex items-center justify-between",
+                !formData.dogumTarihi && "text-muted-foreground",
+              )}
+            >
+              <span>
+                {formData.dogumTarihi
+                  ? format(parseISO(formData.dogumTarihi), "d MMMM yyyy", { locale: tr })
+                  : "Tarih secin"}
+              </span>
+              <CalendarIcon className="h-4 w-4" />
+            </button>
+            {calendarOpen && (
+              <div className="absolute left-0 top-14 z-50 rounded-xl border bg-background shadow-lg">
+                <Calendar
+                  mode="single"
+                  selected={formData.dogumTarihi ? parseISO(formData.dogumTarihi) : undefined}
+                  onSelect={(date) => {
+                    if (!date) return;
+                    setFormData({ ...formData, dogumTarihi: format(date, "yyyy-MM-dd") });
+                    setCalendarOpen(false);
+                  }}
+                  disabled={(date) => date > new Date()}
+                  initialFocus
+                />
+              </div>
+            )}
+            <input type="hidden" name="dogumTarihi" value={formData.dogumTarihi} required />
+          </div>
         </div>
         <div className="space-y-2">
           <Label htmlFor="cinsiyet">Cinsiyet</Label>

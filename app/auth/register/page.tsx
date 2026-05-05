@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Leaf, Mail, Lock, User, ArrowRight } from "lucide-react";
-import { apiAuth, getApiUrl } from "@/lib/api";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -50,32 +49,21 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    try {
-      await apiAuth("/auth/register", {
-        method: "POST",
-        body: JSON.stringify({
-          first_name: firstName.trim(),
-          last_name: lastName.trim(),
-          email: email.trim(),
-          password,
-        }),
-      });
-      setRegistered(true);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Kayıt başarısız");
-    } finally {
+    setTimeout(() => {
+      setError("Kayit sistemi su anda devre disi.");
       setLoading(false);
-    }
+      setRegistered(false);
+    }, 300);
   };
 
   const handleGoogleRegister = () => {
-    window.location.href = getApiUrl("/api/v1/auth/google");
+    setError("Google ile kayit su anda devre disi.");
   };
 
   return (
     <div className="min-h-screen flex">
       <div className="relative hidden w-0 flex-1 lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
+        <div className="absolute inset-0 bg-linear-to-br from-emerald-600 to-emerald-800" />
         <div className="relative flex h-full flex-col justify-between p-12">
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-white">
@@ -96,7 +84,7 @@ export default function RegisterPage() {
               <p className="text-sm text-emerald-100">Mutlu Danışan</p>
             </div>
           </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+          <div className="relative aspect-4/3 overflow-hidden rounded-2xl">
             <Image
               src="https://images.unsplash.com/photo-1499209974431-9dddcece7f88?w=600&q=80"
               alt="Mental sağlık"

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -124,10 +125,12 @@ export function ExpertProfileEditor() {
         <CardContent className="flex flex-col gap-6 sm:flex-row sm:items-start">
           <div className="relative h-36 w-36 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed border-border bg-muted/40">
             {profile.profileImageDataUrl ? (
-              <img
+              <Image
                 src={profile.profileImageDataUrl}
                 alt="Profil"
-                className="h-full w-full object-cover"
+                fill
+                sizes="144px"
+                className="object-cover"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-muted-foreground">

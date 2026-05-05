@@ -8,9 +8,23 @@ import { setToken, setUser } from "@/lib/auth";
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status] = useState<"loading" | "error">(() => {
+    const access = searchParams.get("access");
+    const token = searchParams.get("token") || access;
+    const userParam = searchParams.get("user");
+
+    if (!token || !userParam) return "error";
+    try {
+      JSON.parse(decodeURIComponent(userParam));
+      return "loading";
+    } catch {
+      return "error";
+    }
+  });
 
   useEffect(() => {
+    if (status === "error") return;
+
     const access = searchParams.get("access");
     const token = searchParams.get("token") || access;
     const userParam = searchParams.get("user");
@@ -23,15 +37,10 @@ function AuthCallbackContent() {
           ...user,
           name: [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email,
         });
-        setStatus("success");
         window.location.href = "/";
-      } catch {
-        setStatus("error");
-      }
-    } else {
-      setStatus("error");
+      } catch {}
     }
-  }, [searchParams]);
+  }, [searchParams, status]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
@@ -45,10 +54,6 @@ function AuthCallbackContent() {
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent mx-auto mb-4" />
           <p className="text-muted-foreground">Giriş yapılıyor...</p>
         </div>
-      )}
-
-      {status === "success" && (
-        <p className="text-muted-foreground">Yönlendiriliyorsunuz...</p>
       )}
 
       {status === "error" && (

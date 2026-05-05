@@ -28,7 +28,7 @@ export function CityExperts() {
             </p>
           </div>
           <Link
-            href="/experts"
+            href="/psikologlar"
             className={cn(buttonVariants({ variant: "ghost" }), "w-fit flex items-center gap-1")}
           >
             Tümünü Gör
@@ -40,7 +40,7 @@ export function CityExperts() {
           {cities.map((city) => (
             <Link
               key={city.slug}
-              href={`/experts?city=${city.slug}`}
+              href={`/psikologlar?city=${city.slug}`}
               className="flex items-center gap-2 rounded-full border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:border-primary hover:bg-primary/5"
             >
               <MapPin className="h-4 w-4 text-primary" />
@@ -51,7 +51,7 @@ export function CityExperts() {
 
         <div className="mt-8 text-center">
           <Link
-            href="/experts"
+            href="/psikologlar"
             className={cn(buttonVariants(), "rounded-full px-8")}
           >
             Türkiye&apos;deki Tüm Uzmanları Görüntüle
