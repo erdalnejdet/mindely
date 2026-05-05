@@ -3,6 +3,7 @@ import { Leaf, Instagram, Twitter, Facebook, Linkedin } from "lucide-react";
 
 const footerLinks = {
   quickAccess: [
+    { href: "/dashboard", label: "Panel" },
     { href: "/psikologlar", label: "Psikologlar" },
     { href: "/psikologlar", label: "Randevu Al" },
     { href: "/tests", label: "Psikolojik Testler" },

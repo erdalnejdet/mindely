@@ -13,6 +13,7 @@ Bu dosya, yeni bir sohbete gecildiginde kaldigimiz yerden devam etmek icin tutul
 - Hedef: Projede API istegi yapan tum noktalarin tespiti.
 - Sonuc: API cagrilari kod tabanindan kaldirildi.
 - Not: `app/api/**/route.ts` altinda Next.js route handler bulunmuyor.
+- Panel: `/dashboard` yeniden var; psikolog profili detay sayfasi dilinde tek sayfa, form state mock (localStorage yok), JSON `formStateToJsonPayload` ile onizleme + `console.info`. Uzmanlik ekleme `Dialog` modal. Ortak dogum tarihi: `components/ui/dogum-tarihi-picker.tsx` (Popover + Calendar).
 
 ## API Cagri Envanteri
 
@@ -219,4 +220,46 @@ Bu dosya, yeni bir sohbete gecildiginde kaldigimiz yerden devam etmek icin tutul
     - `components/layout/Footer.tsx`: `Panel` linki kaldirildi, `Terapist Islemleri` linki eklendi.
     - `app/terapist-islemleri/onay/page.tsx`: `Panele Git` aksiyonu `Terapist Islemlerine Git` olarak degisti.
   - Projede `/dashboard` ve dashboard component referanslari sifirlandi.
+- Durum: Tamamlandi.
+
+### 2026-05-05 ~18:45 (UTC+3)
+
+- Istek: "Terapist dogum tarihi shadcn Calendar (radix) + Popover; tum dogum tarihi yerleri ortak component."
+- Yapilan:
+  - `npx shadcn add popover`, `npx shadcn add calendar --overwrite` ile resmi bileşenler.
+  - `components/terapist/TerapistKayitForm.tsx`: Date of Birth ornegi (Popover + Calendar, `captionLayout="dropdown"`, `react-day-picker/locale` tr).
+  - `components/ui/dogum-tarihi-picker.tsx`: tekrar kullanilabilir alan (value `yyyy-MM-dd`, gizli input opsiyonel).
+  - `lib/button-variants.ts`: `buttonVariants` re-export `@/components/ui/button` (CLI buton birlestirmesi).
+- Durum: Tamamlandi.
+
+### 2026-05-05 ~19:00 (UTC+3)
+
+- Istek: "Psikolog detayina gore dashboard, tab menulu."
+- Yapilan:
+  - `app/dashboard/page.tsx` + `components/dashboard/PsikologDashboardView.tsx` (demo psikolog id `1`).
+  - `npx shadcn add tabs` (sonra tek sayfa tasarimina geciste tablar kaldirildi veya kullanimdan dustu; `components/ui/tabs.tsx` projede duruyor).
+  - Header/Footer: `Panel` -> `/dashboard` linkleri.
+- Not: Sonraki iterasyonda tablar kaldirildi; asagidaki madde guncel yerlesim.
+
+### 2026-05-05 ~19:30 (UTC+3)
+
+- Istek: "Panel duzenlenebilir profil; localStorage yok mock JSON; detay gibi tek yer; uzmanlik ve egitim/deneyim ekle-cikar, JSON gidecek."
+- Yapilan:
+  - `lib/panel-profile-storage.ts` kaldirildi.
+  - `lib/panel-profile.ts`: `PsikologPanelFormState`, `PsikologPanelJsonPayload`, `mockPanelStateFromPsikolog`, `formStateToJsonPayload`, `EducationExperienceItem[]` + `specializations: string[]`.
+  - `PsikologDashboardView`: psikolog detay grid'i (hero + sol form bloklari + sag seans/randevu karti); "Mock kaydet (JSON)" ile `jsonPreview` + konsol; egitim satirlari dinamik.
+- Durum: Tamamlandi.
+
+### 2026-05-05 ~19:45 (UTC+3)
+
+- Istek: "Uzmanlik alanlari Ekle'ye tiklayinca modal."
+- Yapilan:
+  - `npx shadcn add dialog` -> `components/ui/dialog.tsx`.
+  - Uzmanlik listesi disindaki satir ici input kaldirildi; `Ekle` -> Dialog (`specDraft`, Listeye ekle / Iptal, Enter ile onay).
+- Durum: Tamamlandi.
+
+### 2026-05-05 ~20:00 (UTC+3)
+
+- Istek: "Bunlari SECOND_BRAIN'a kaydet."
+- Yapilan: Bu tarihce maddeleri ve Durum Ozeti panel satiri eklendi.
 - Durum: Tamamlandi.

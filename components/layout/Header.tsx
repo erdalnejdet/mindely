@@ -53,6 +53,12 @@ export function Header() {
         <div className="hidden items-center gap-3 md:flex">
           {user ? (
             <>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              >
+                Panel
+              </Link>
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
                 {user.name}
@@ -107,6 +113,13 @@ export function Header() {
               <div className="mt-4 flex flex-col gap-2">
                 {user ? (
                   <>
+                    <Link
+                      href="/dashboard"
+                      className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Panel
+                    </Link>
                     <p className="px-3 py-2 text-sm text-muted-foreground">
                       {user.name}
                     </p>

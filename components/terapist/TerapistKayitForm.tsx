@@ -3,20 +3,11 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { format, parseISO } from "date-fns";
-import { tr as trFns } from "date-fns/locale";
-import { tr } from "react-day-picker/locale";
-import { ArrowLeft, ChevronDownIcon } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DogumTarihiPicker } from "@/components/ui/dogum-tarihi-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
 
 export const TERAPIST_UYELIK_STORAGE_KEY = "mindely_terapist_uyelik";
 
@@ -31,7 +22,6 @@ const CINSIYET_OPTIONS = [
 export function TerapistKayitForm() {
   const router = useRouter();
   const [loading, setLoading] = React.useState(false);
-  const [dobOpen, setDobOpen] = React.useState(false);
   const [formData, setFormData] = React.useState({
     ad: "",
     soyad: "",
@@ -114,58 +104,13 @@ export function TerapistKayitForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="dogumTarihi">Doğum tarihi</Label>
-          <Popover open={dobOpen} onOpenChange={setDobOpen}>
-            <PopoverTrigger
-              id="dogumTarihi"
-              className={cn(
-                buttonVariants({ variant: "outline" }),
-                "h-12 w-full justify-between rounded-xl px-4 text-left font-normal shadow-xs",
-                !formData.dogumTarihi && "text-muted-foreground",
-              )}
-            >
-              <span>
-                {formData.dogumTarihi
-                  ? format(parseISO(formData.dogumTarihi), "d MMMM yyyy", {
-                      locale: trFns,
-                    })
-                  : "Tarih seçin"}
-              </span>
-              <ChevronDownIcon className="size-4 shrink-0 opacity-60" />
-            </PopoverTrigger>
-            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-              <Calendar
-                mode="single"
-                locale={tr}
-                captionLayout="dropdown"
-                startMonth={new Date(1920, 0)}
-                endMonth={new Date()}
-                defaultMonth={
-                  formData.dogumTarihi
-                    ? parseISO(formData.dogumTarihi)
-                    : new Date(1990, 0)
-                }
-                selected={
-                  formData.dogumTarihi
-                    ? parseISO(formData.dogumTarihi)
-                    : undefined
-                }
-                onSelect={(date) => {
-                  if (!date) return;
-                  setFormData({
-                    ...formData,
-                    dogumTarihi: format(date, "yyyy-MM-dd"),
-                  });
-                  setDobOpen(false);
-                }}
-                disabled={(date) => date > new Date()}
-                autoFocus
-              />
-            </PopoverContent>
-          </Popover>
-          <input
-            type="hidden"
-            name="dogumTarihi"
+          <DogumTarihiPicker
+            id="dogumTarihi"
             value={formData.dogumTarihi}
+            onValueChange={(dogumTarihi) =>
+              setFormData({ ...formData, dogumTarihi })
+            }
+            name="dogumTarihi"
             required
           />
         </div>
