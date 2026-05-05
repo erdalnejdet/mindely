@@ -1,15 +1,21 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import * as React from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
-import { tr } from "date-fns/locale";
-import { ArrowLeft, Calendar as CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { tr as trFns } from "date-fns/locale";
+import { tr } from "react-day-picker/locale";
+import { ArrowLeft, ChevronDownIcon } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
 export const TERAPIST_UYELIK_STORAGE_KEY = "mindely_terapist_uyelik";
@@ -24,10 +30,9 @@ const CINSIYET_OPTIONS = [
 
 export function TerapistKayitForm() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const calendarWrapperRef = useRef<HTMLDivElement>(null);
-  const [formData, setFormData] = useState({
+  const [loading, setLoading] = React.useState(false);
+  const [dobOpen, setDobOpen] = React.useState(false);
+  const [formData, setFormData] = React.useState({
     ad: "",
     soyad: "",
     email: "",
@@ -53,20 +58,6 @@ export function TerapistKayitForm() {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    const onPointerDown = (event: MouseEvent) => {
-      if (!calendarWrapperRef.current) return;
-      if (!calendarWrapperRef.current.contains(event.target as Node)) {
-        setCalendarOpen(false);
-      }
-    };
-
-    if (calendarOpen) {
-      window.addEventListener("mousedown", onPointerDown);
-    }
-    return () => window.removeEventListener("mousedown", onPointerDown);
-  }, [calendarOpen]);
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
@@ -123,41 +114,60 @@ export function TerapistKayitForm() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="dogumTarihi">Doğum tarihi</Label>
-          <div className="relative" ref={calendarWrapperRef}>
-            <button
+          <Popover open={dobOpen} onOpenChange={setDobOpen}>
+            <PopoverTrigger
               id="dogumTarihi"
-              type="button"
-              onClick={() => setCalendarOpen((prev) => !prev)}
               className={cn(
-                "h-12 w-full rounded-xl border border-input bg-background px-4 text-left text-sm",
-                "flex items-center justify-between",
+                buttonVariants({ variant: "outline" }),
+                "h-12 w-full justify-between rounded-xl px-4 text-left font-normal shadow-xs",
                 !formData.dogumTarihi && "text-muted-foreground",
               )}
             >
               <span>
                 {formData.dogumTarihi
-                  ? format(parseISO(formData.dogumTarihi), "d MMMM yyyy", { locale: tr })
-                  : "Tarih secin"}
+                  ? format(parseISO(formData.dogumTarihi), "d MMMM yyyy", {
+                      locale: trFns,
+                    })
+                  : "Tarih seçin"}
               </span>
-              <CalendarIcon className="h-4 w-4" />
-            </button>
-            {calendarOpen && (
-              <div className="absolute left-0 top-14 z-50 rounded-xl border bg-background shadow-lg">
-                <Calendar
-                  mode="single"
-                  selected={formData.dogumTarihi ? parseISO(formData.dogumTarihi) : undefined}
-                  onSelect={(date) => {
-                    if (!date) return;
-                    setFormData({ ...formData, dogumTarihi: format(date, "yyyy-MM-dd") });
-                    setCalendarOpen(false);
-                  }}
-                  disabled={(date) => date > new Date()}
-                  initialFocus
-                />
-              </div>
-            )}
-            <input type="hidden" name="dogumTarihi" value={formData.dogumTarihi} required />
-          </div>
+              <ChevronDownIcon className="size-4 shrink-0 opacity-60" />
+            </PopoverTrigger>
+            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+              <Calendar
+                mode="single"
+                locale={tr}
+                captionLayout="dropdown"
+                startMonth={new Date(1920, 0)}
+                endMonth={new Date()}
+                defaultMonth={
+                  formData.dogumTarihi
+                    ? parseISO(formData.dogumTarihi)
+                    : new Date(1990, 0)
+                }
+                selected={
+                  formData.dogumTarihi
+                    ? parseISO(formData.dogumTarihi)
+                    : undefined
+                }
+                onSelect={(date) => {
+                  if (!date) return;
+                  setFormData({
+                    ...formData,
+                    dogumTarihi: format(date, "yyyy-MM-dd"),
+                  });
+                  setDobOpen(false);
+                }}
+                disabled={(date) => date > new Date()}
+                autoFocus
+              />
+            </PopoverContent>
+          </Popover>
+          <input
+            type="hidden"
+            name="dogumTarihi"
+            value={formData.dogumTarihi}
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="cinsiyet">Cinsiyet</Label>
