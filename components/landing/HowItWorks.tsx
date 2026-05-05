@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { UserPlus, Calendar, Video } from "lucide-react";
 
 const steps = [
@@ -27,10 +28,36 @@ const steps = [
 ];
 
 export function HowItWorks() {
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const element = sectionRef.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2 },
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="bg-muted/30 px-4 py-16 sm:px-6 lg:px-8">
+    <section ref={sectionRef} className="bg-muted/30 px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <div className="text-center">
+        <div
+          className={`text-center transition-all duration-700 ${
+            isVisible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"
+          }`}
+        >
           <h2 className="text-2xl font-bold text-foreground sm:text-3xl">
             Online Görüşme Nasıl Çalışır?
           </h2>
@@ -43,7 +70,10 @@ export function HowItWorks() {
           {steps.map((step) => (
             <div
               key={step.number}
-              className="flex flex-col items-center text-center"
+              className={`flex flex-col items-center text-center transition-all duration-700 ${
+                isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
+              }`}
+              style={{ transitionDelay: `${step.number * 120}ms` }}
             >
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
                 <step.icon className="h-8 w-8" />

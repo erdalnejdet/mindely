@@ -1,4 +1,4 @@
-export const experts = [
+export const psikologlar = [
   {
     id: "1",
     slug: "melis-akcay",
@@ -46,14 +46,6 @@ export const experts = [
   },
 ];
 
-export function getExpertBySlug(slug: string) {
-  return experts.find((e) => e.slug === slug);
-}
-
-export function getExpertById(id: string) {
-  return experts.find((e) => e.id === id);
-}
-
-export function getExpertBySlugOrId(slugOrId: string) {
-  return experts.find((e) => e.slug === slugOrId || e.id === slugOrId);
+export function getPsikologBySlugOrId(slugOrId: string) {
+  return psikologlar.find((psikolog) => psikolog.slug === slugOrId || psikolog.id === slugOrId);
 }

@@ -54,7 +54,7 @@ export function HeroSection() {
                   />
                 </div>
                 <Link
-                  href="/experts"
+                  href="/psikologlar"
                   className={cn(buttonVariants({ size: "lg" }), "h-12 rounded-full px-8")}
                 >
                   <Search className="mr-2 h-5 w-5" />
@@ -63,7 +63,7 @@ export function HeroSection() {
               </div>
               <div className="flex gap-2">
                 <Link
-                  href="/experts?type=online"
+                  href="/psikologlar?type=online"
                   className={cn(
                     buttonVariants({ variant: "default" }),
                     "rounded-full"
@@ -72,7 +72,7 @@ export function HeroSection() {
                   Online Terapi
                 </Link>
                 <Link
-                  href="/experts?type=in-person"
+                  href="/psikologlar?type=in-person"
                   className={cn(
                     buttonVariants({ variant: "outline" }),
                     "rounded-full"
@@ -85,7 +85,7 @@ export function HeroSection() {
                 {quickFilters.map((filter) => (
                   <Link
                     key={filter}
-                    href={`/experts?filter=${filter.toLowerCase()}`}
+                    href={`/psikologlar?filter=${filter.toLowerCase()}`}
                     className={cn(buttonVariants({ variant: "secondary", size: "sm" }), "rounded-full")}
                   >
                     {filter}
@@ -96,7 +96,7 @@ export function HeroSection() {
           </div>
 
           <div className="relative flex-1">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl bg-muted shadow-xl">
+            <div className="relative aspect-4/3 overflow-hidden rounded-3xl bg-muted shadow-xl">
               <Image
                 src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=800&q=80"
                 alt="Meditasyon ve mental sağlık"

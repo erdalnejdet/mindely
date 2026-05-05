@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Leaf, Mail, Lock, ArrowRight, X } from "lucide-react";
-import { apiAuth, apiFetch, getApiUrl } from "@/lib/api";
-import { setToken, setUser } from "@/lib/auth";
+import { removeUser, setToken } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,26 +47,16 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const data = await apiAuth<{ user: { uuid: string; email: string; first_name: string; last_name: string }; tokens: { access: string; refresh: string } }>(
-        "/auth/login",
-        {
-          method: "POST",
-          body: JSON.stringify({ email, password }),
-        }
-      );
-      setToken(data.tokens.access);
-      setUser({ ...data.user, name: `${data.user.first_name} ${data.user.last_name}`.trim() });
-      window.location.href = "/";
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Giriş başarısız");
-    } finally {
+    setTimeout(() => {
+      setToken("");
+      removeUser();
+      setError("Giris sistemi su anda devre disi.");
       setLoading(false);
-    }
+    }, 300);
   };
 
   const handleGoogleLogin = () => {
-    window.location.href = getApiUrl("/api/v1/auth/google");
+    setError("Google ile giris su anda devre disi.");
   };
 
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
@@ -75,17 +64,10 @@ export default function LoginPage() {
     setForgotError("");
     setForgotSuccess(false);
     setForgotLoading(true);
-    try {
-      await apiAuth("/auth/forgot-password", {
-        method: "POST",
-        body: JSON.stringify({ email: forgotEmail }),
-      });
-      setForgotSuccess(true);
-    } catch (err) {
-      setForgotError(err instanceof Error ? err.message : "Bir hata oluştu");
-    } finally {
+    setTimeout(() => {
+      setForgotError("Sifre sifirlama su anda devre disi.");
       setForgotLoading(false);
-    }
+    }, 300);
   };
 
   const closeForgotModal = () => {
@@ -205,7 +187,7 @@ export default function LoginPage() {
       </div>
 
       <div className="relative hidden w-0 flex-1 lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-800" />
+        <div className="absolute inset-0 bg-linear-to-br from-emerald-600 to-emerald-800" />
         <div className="relative flex h-full flex-col justify-between p-12">
           <div className="rounded-2xl bg-white/10 p-6 backdrop-blur">
             <p className="text-lg text-white">
@@ -216,7 +198,7 @@ export default function LoginPage() {
               — Platform kullanıcısı
             </p>
           </div>
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl">
+          <div className="relative aspect-4/3 overflow-hidden rounded-2xl">
             <Image
               src="https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=600&q=80"
               alt="Mental sağlık"

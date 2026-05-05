@@ -4,45 +4,8 @@ import Link from "next/link";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { buttonVariants } from "@/lib/button-variants";
 import { ArrowLeft } from "lucide-react";
-
-const tests: Record<
-  string,
-  {
-    title: string;
-    description: string;
-    questionCount: number;
-    duration: string;
-  }
-> = {
-  "anksiyete-testi": {
-    title: "Anksiyete Testi",
-    description:
-      "Bu test, günlük yaşamınızda ne kadar kaygı yaşadığınızı değerlendirmenize yardımcı olur. Lütfen her soruyu dikkatle okuyun ve son 2 haftadaki durumunuza göre cevaplayın.",
-    questionCount: 21,
-    duration: "5-10 dakika",
-  },
-  "depresyon-testi": {
-    title: "Depresyon Testi",
-    description:
-      "Bu test, depresif belirtilerinizi değerlendirmenize yardımcı olur. Son 2 haftadaki ruh halinize göre en uygun seçeneği işaretleyin.",
-    questionCount: 9,
-    duration: "5 dakika",
-  },
-  "stres-testi": {
-    title: "Stres Testi",
-    description:
-      "Bu test, günlük hayatınızdaki stres düzeyinizi ölçer. Lütfen samimi yanıtlar verin.",
-    questionCount: 15,
-    duration: "3-5 dakika",
-  },
-  "psikolojik-checkup": {
-    title: "Psikolojik Check Up",
-    description:
-      "Genel ruh sağlığınızı değerlendiren kapsamlı tarama. Birden fazla alanı içerir.",
-    questionCount: 30,
-    duration: "15-20 dakika",
-  },
-};
+import { TESTS } from "@/lib/data/tests";
+import { TestStartModal } from "@/components/tests/TestStartModal";
 
 export async function generateMetadata({
   params,
@@ -50,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const test = tests[slug];
+  const test = TESTS[slug];
   if (!test) return { title: "Test Bulunamadı" };
   return {
     title: test.title,
@@ -64,7 +27,7 @@ export default async function TestDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const test = tests[slug];
+  const test = TESTS[slug];
 
   if (!test) notFound();
 
@@ -106,12 +69,7 @@ export default async function TestDetailPage({
             </p>
           </div>
 
-          <Link
-            href={`/tests/${slug}/coz`}
-            className={`${buttonVariants({ size: "lg" })} mt-8 w-full rounded-xl`}
-          >
-            Testi Başlat
-          </Link>
+          <TestStartModal slug={slug} />
         </div>
       </div>
     </PageLayout>

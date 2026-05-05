@@ -39,7 +39,7 @@ export default function DashboardPage() {
               Bu hafta planlanmış randevu yok
             </p>
             <Link
-              href="/booking"
+              href="/psikologlar"
               className={cn(
                 buttonVariants({ variant: "outline" }),
                 "mt-4 w-full rounded-xl"
@@ -110,7 +110,7 @@ export default function DashboardPage() {
               Henüz planlanmış randevunuz yok
             </p>
             <Link
-              href="/experts"
+              href="/psikologlar"
               className={cn(buttonVariants(), "mt-4 rounded-xl")}
             >
               Uzman Seç ve Randevu Al

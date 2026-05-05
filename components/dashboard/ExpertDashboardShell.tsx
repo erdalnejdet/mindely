@@ -32,7 +32,7 @@ export function ExpertDashboardShell({
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
+  const renderNavLinks = (onNavigate?: () => void) => (
     <nav className="space-y-1 p-3">
       {navItems.map(({ href, label, icon: Icon }) => {
         const active =
@@ -81,7 +81,7 @@ export function ExpertDashboardShell({
         </div>
         {mobileOpen && (
           <div className="border-t border-border bg-background lg:hidden">
-            <NavLinks onNavigate={() => setMobileOpen(false)} />
+            {renderNavLinks(() => setMobileOpen(false))}
           </div>
         )}
       </div>
@@ -92,7 +92,7 @@ export function ExpertDashboardShell({
             <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Menü
             </p>
-            <NavLinks />
+            {renderNavLinks()}
           </div>
         </aside>
         <div className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8">{children}</div>
