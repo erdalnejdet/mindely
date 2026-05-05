@@ -6,7 +6,7 @@ const footerLinks = {
     { href: "/psikologlar", label: "Psikologlar" },
     { href: "/psikologlar", label: "Randevu Al" },
     { href: "/tests", label: "Psikolojik Testler" },
-    { href: "/dashboard", label: "Panel" },
+    { href: "/terapist-islemleri", label: "Terapist Islemleri" },
   ],
   corporate: [
     { href: "/hakkimizda", label: "Hakkımızda" },

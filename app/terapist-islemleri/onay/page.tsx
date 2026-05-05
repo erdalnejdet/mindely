@@ -104,9 +104,9 @@ export default function OnayPage() {
           </div>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link href="/dashboard/expert">
+            <Link href="/terapist-islemleri">
               <Button size="lg" className="rounded-xl w-full sm:w-auto">
-                Panele Git
+                Terapist Islemlerine Git
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </Link>

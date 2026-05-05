@@ -208,3 +208,15 @@ Bu dosya, yeni bir sohbete gecildiginde kaldigimiz yerden devam etmek icin tutul
   - Ay basligi orta hizaya sabitlendi, onceki-solraki ay butonlari nav satirinda solda/sagda konumlandi.
   - Root genisligi `w-full` yapilarak tasma/konum kaymasi azaltildi.
 - Durum: Tamamlandi.
+
+### 2026-05-05 17:29 (UTC+3)
+
+- Istek: "Dashboard kismini tamamen sil."
+- Yapilan:
+  - `app/dashboard/**` altindaki tum route dosyalari silindi.
+  - `components/dashboard/**` altindaki dashboard componentleri silindi.
+  - Dashboarda giden kalan linkler guncellendi:
+    - `components/layout/Footer.tsx`: `Panel` linki kaldirildi, `Terapist Islemleri` linki eklendi.
+    - `app/terapist-islemleri/onay/page.tsx`: `Panele Git` aksiyonu `Terapist Islemlerine Git` olarak degisti.
+  - Projede `/dashboard` ve dashboard component referanslari sifirlandi.
+- Durum: Tamamlandi.
