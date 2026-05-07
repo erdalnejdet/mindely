@@ -14,6 +14,10 @@ Bu dosya, yeni bir sohbete gecildiginde kaldigimiz yerden devam etmek icin tutul
 - Sonuc: API cagrilari kod tabanindan kaldirildi.
 - Not: `app/api/**/route.ts` altinda Next.js route handler bulunmuyor.
 - Panel: `/dashboard` yeniden var; psikolog profili detay sayfasi dilinde tek sayfa, form state mock (localStorage yok), JSON `formStateToJsonPayload` ile onizleme + `console.info`. Uzmanlik ekleme `Dialog` modal. Ortak dogum tarihi: `components/ui/dogum-tarihi-picker.tsx` (Popover + Calendar).
+- Panel refactor: `components/dashboard/PsikologDashboardView.tsx` parcalandi. Yeni klasor: `components/dashboard/psikolog-panel/` (Hero, TabTriggers, Profil tab, Genel ayarlar tab, Saat kapatma tab).
+- Genel ayarlar: yeni sekme; `aktifSeansAlma` checkbox + `minRezervasyonSaat` input (saat). Payload `parseMinRezervasyonSaatInput` ile `number | null`.
+- Profil foto: URL yerine `input type=\"file\"` ile secim; `FileReader` ile `form.image` icine data URL yaziliyor (mock).
+- Randevularim: `Saat kapatma` yanina yeni sekme; bekleyen + tamamlanan randevular (mock liste).
 
 ## API Cagri Envanteri
 
@@ -116,6 +120,16 @@ Bu dosya, yeni bir sohbete gecildiginde kaldigimiz yerden devam etmek icin tutul
   - `app/psikologlar/[slug]/page.tsx` icinde randevu aksiyonu modal acacak sekilde guncellendi.
   - Liste ve landing `Randevu Al` linkleri modal acilisli detaya cekildi: `?randevu=1`.
   - `app/booking/page.tsx` ayri akisi kaldirmak icin `/psikologlar`'a yonlendirildi.
+- Durum: Tamamlandi.
+
+### 2026-05-07 16:14 (UTC+3)
+
+- Istek: \"Genel ayarlar sekmesi + minimum rezervasyon input (saat)\" ve paneli componentlere bol; profil foto URL yerine dosya secimi; \"Saat kapatma\" yanina \"Randevularim\" sekmesi ekle.
+- Yapilan:
+  - Panel bileşenlere ayrildi: `components/dashboard/psikolog-panel/*` ve ana dosyada sadece state + handler kaldı.
+  - Genel ayarlar sekmesi eklendi: `aktifSeansAlma`, `minRezervasyonSaat` (input).
+  - Profil foto alanı `input type=file` oldu; seçilen dosya data URL olarak state'e yaziliyor (mock).
+  - Yeni sekme: `Randevularım` (bekleyen + tamamlanan listeler, mock).
 - Durum: Tamamlandi.
 
 ### 2026-05-05 12:01 (UTC+3)

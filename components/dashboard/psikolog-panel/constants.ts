@@ -28,3 +28,64 @@ export const demoRandevular = [
   { tarih: "15 Mayıs 2026", saat: "10:00", danisan: "M. K." },
   { tarih: "18 Mayıs 2026", saat: "16:30", danisan: "S. D." },
 ] as const;
+
+export const demoPendingAppointments = [
+  {
+    id: "b-1",
+    tarih: "10 Mayıs 2026",
+    saat: "09:30",
+    danisan: "E. T.",
+    not: "İlk görüşme",
+  },
+  {
+    id: "b-2",
+    tarih: "13 Mayıs 2026",
+    saat: "18:00",
+    danisan: "B. S.",
+    not: "Takip seansı",
+  },
+] as const;
+
+export const demoCompletedAppointments = [
+  {
+    id: "t-1",
+    tarih: "02 Mayıs 2026",
+    saat: "11:00",
+    danisan: "M. A.",
+    not: "Seans tamamlandı",
+  },
+  {
+    id: "t-2",
+    tarih: "04 Mayıs 2026",
+    saat: "15:30",
+    danisan: "N. K.",
+    not: "Seans tamamlandı",
+  },
+] as const;
+
+export const demoClients = [
+  {
+    id: "c-1",
+    fullName: "Elif Taş",
+    phone: "+90 530 123 45 67",
+    email: "elif.tas@example.com",
+    lastAppointment: "10 Mayıs 2026 • 09:30",
+    status: "Aktif",
+  },
+  {
+    id: "c-2",
+    fullName: "Berk Sarı",
+    phone: "+90 532 222 11 00",
+    email: "berk.sari@example.com",
+    lastAppointment: "13 Mayıs 2026 • 18:00",
+    status: "Aktif",
+  },
+  {
+    id: "c-3",
+    fullName: "Merve Akın",
+    phone: "+90 533 987 65 43",
+    email: "merve.akin@example.com",
+    lastAppointment: "02 Mayıs 2026 • 11:00",
+    status: "Arşiv",
+  },
+] as const;

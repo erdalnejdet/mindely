@@ -15,8 +15,8 @@ export const metadata: Metadata = {
 export default function TerapistKayitPage() {
   return (
     <PageLayout>
-      <div className="bg-emerald-50/30 py-12 sm:py-16">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+      <div className="bg-[#f4fafd] py-12 sm:py-16">
+        <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
           <Link
             href="/terapist-islemleri"
             className={cn(buttonVariants({ variant: "ghost" }), "mb-8")}
@@ -25,13 +25,11 @@ export default function TerapistKayitPage() {
             Terapist İşlemleri
           </Link>
 
-          <div className="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
-            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-              Üye Ol
-            </h1>
+          <div className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm sm:p-8">
+            <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Terapist Kaydı</h1>
             <p className="mt-2 text-muted-foreground">
-              Temel bilgilerinizi girerek terapist üyeliğinizi oluşturun. Profil
-              ve paket seçimini sonradan tamamlayabilirsiniz.
+              Dashboard tarzında adımlı kayıt. Ad/soyad/e‑posta/telefon zorunlu; diğer alanlar
+              opsiyonel. Son adımda abonelik seçip kaydedin (JSON loglanır).
             </p>
 
             <div className="mt-8">

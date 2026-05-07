@@ -10,9 +10,11 @@ import {
 } from "@/lib/panel-profile";
 import {
   HAFTA_GUNLERI,
+  PsikologPanelDanisanlarimTab,
   PsikologPanelGenelAyarlarTab,
   PsikologPanelHero,
   PsikologPanelProfilTab,
+  PsikologPanelRandevularimTab,
   PsikologPanelSaatKapatmaTab,
   PsikologPanelTabTriggers,
   type KapaliSaatAraligi,
@@ -136,6 +138,14 @@ export function PsikologDashboardView({ psikolog }: PsikologDashboardViewProps) 
                 saatJsonPreview={saatJsonPreview}
                 onMockSave={handleSaatKapatmaMockSave}
               />
+            </TabsContent>
+
+            <TabsContent value="randevularim" className="mt-0 space-y-6">
+              <PsikologPanelRandevularimTab />
+            </TabsContent>
+
+            <TabsContent value="danisanlarim" className="mt-0 space-y-6">
+              <PsikologPanelDanisanlarimTab />
             </TabsContent>
           </Tabs>
         </div>
