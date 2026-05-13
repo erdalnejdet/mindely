@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { DogumTarihiPicker } from "@/components/ui/dogum-tarihi-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 const CINSIYET_OPTIONS = [
@@ -71,9 +70,122 @@ function isValidEmail(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 }
 
+function digitsOnly(v: string) {
+  return v.replace(/\D/g, "");
+}
+
+function formatCardNumber(raw: string) {
+  const d = digitsOnly(raw).slice(0, 19);
+  const groups = d.match(/.{1,4}/g) ?? [];
+  return groups.join(" ");
+}
+
+function formatExpiry(raw: string) {
+  const d = digitsOnly(raw).slice(0, 4);
+  const mm = d.slice(0, 2);
+  const yy = d.slice(2, 4);
+  if (d.length <= 2) return mm;
+  return `${mm}/${yy}`;
+}
+
+function isValidLuhn(cardDigits: string) {
+  // Basic Luhn check for card number validity (mock validation)
+  if (cardDigits.length < 12) return false;
+  let sum = 0;
+  let shouldDouble = false;
+  for (let i = cardDigits.length - 1; i >= 0; i--) {
+    let digit = Number(cardDigits[i]);
+    if (!Number.isFinite(digit)) return false;
+    if (shouldDouble) {
+      digit *= 2;
+      if (digit > 9) digit -= 9;
+    }
+    sum += digit;
+    shouldDouble = !shouldDouble;
+  }
+  return sum % 10 === 0;
+}
+
+function isValidExpiry(exp: string) {
+  const m = exp.match(/^(\d{2})\/(\d{2})$/);
+  if (!m) return false;
+  const mm = Number(m[1]);
+  const yy = Number(m[2]);
+  if (!Number.isFinite(mm) || !Number.isFinite(yy)) return false;
+  if (mm < 1 || mm > 12) return false;
+  // Assume 20YY
+  const now = new Date();
+  const curYY = now.getFullYear() % 100;
+  const curMM = now.getMonth() + 1;
+  if (yy < curYY) return false;
+  if (yy === curYY && mm < curMM) return false;
+  return true;
+}
+
+const STEPS = [
+  { id: "temel", label: "Temel bilgiler" },
+  { id: "opsiyonel", label: "Diğer bilgiler" },
+  { id: "abonelik", label: "Abonelik" },
+  { id: "odeme", label: "Ödeme" },
+] as const;
+
+type StepId = (typeof STEPS)[number]["id"];
+
+function Stepper({ step }: { step: StepId }) {
+  const currentIndex = Math.max(
+    0,
+    STEPS.findIndex((s) => s.id === step),
+  );
+
+  return (
+    <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
+      <div className="flex items-center justify-between gap-3">
+        {STEPS.map((s, i) => {
+          const isCompleted = i < currentIndex;
+          const isActive = i === currentIndex;
+          return (
+            <div key={s.id} className="flex min-w-0 flex-1 items-center gap-3">
+              <div
+                className={cn(
+                  "flex size-9 shrink-0 items-center justify-center rounded-full border text-sm font-semibold",
+                  isCompleted && "border-emerald-600 bg-emerald-600 text-white",
+                  isActive && "border-emerald-300 bg-emerald-50 text-emerald-800",
+                  !isCompleted && !isActive && "border-border bg-background text-muted-foreground",
+                )}
+              >
+                {isCompleted ? "✓" : i + 1}
+              </div>
+              <div className="min-w-0">
+                <p
+                  className={cn(
+                    "truncate text-sm font-semibold",
+                    isCompleted && "text-emerald-800",
+                    isActive && "text-foreground",
+                    !isCompleted && !isActive && "text-muted-foreground",
+                  )}
+                >
+                  {s.label}
+                </p>
+              </div>
+              {i !== STEPS.length - 1 ? (
+                <div
+                  className={cn(
+                    "mx-2 hidden h-1 flex-1 rounded-full sm:block",
+                    isCompleted ? "bg-emerald-600" : "bg-muted",
+                  )}
+                />
+              ) : null}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function TerapistKayitForm() {
   const [loading, setLoading] = React.useState(false);
-  const [step, setStep] = React.useState<"temel" | "opsiyonel" | "abonelik">("temel");
+  const [step, setStep] = React.useState<StepId>("temel");
   const [errors, setErrors] = React.useState<{ temel?: string; abonelik?: string }>({});
   const [formData, setFormData] = React.useState({
     ad: "",
@@ -84,6 +196,13 @@ export function TerapistKayitForm() {
     cinsiyet: "",
   });
   const [selectedPlanId, setSelectedPlanId] = React.useState<PaketId | null>(null);
+  const [payment, setPayment] = React.useState({
+    cardHolder: "",
+    cardNumber: "",
+    expiry: "",
+    cvc: "",
+    accept: false,
+  });
 
   const validateTemel = () => {
     const ad = formData.ad.trim();
@@ -96,6 +215,18 @@ export function TerapistKayitForm() {
     if (!isValidEmail(email)) {
       return "Lütfen geçerli bir e‑posta adresi girin.";
     }
+    return null;
+  };
+
+  const validatePayment = () => {
+    const cardDigits = digitsOnly(payment.cardNumber);
+    const cvcDigits = digitsOnly(payment.cvc);
+    if (!payment.cardHolder.trim()) return "Kart üzerindeki isim zorunludur.";
+    if (cardDigits.length < 12) return "Kart numarası en az 12 hane olmalıdır.";
+    if (!isValidLuhn(cardDigits)) return "Kart numarası geçersiz görünüyor.";
+    if (!isValidExpiry(payment.expiry)) return "Son kullanma tarihi geçersiz (AA/YY).";
+    if (cvcDigits.length < 3 || cvcDigits.length > 4) return "CVC 3 veya 4 hane olmalıdır.";
+    if (!payment.accept) return "Devam etmek için ödeme koşullarını onaylayın.";
     return null;
   };
 
@@ -112,6 +243,12 @@ export function TerapistKayitForm() {
     if (!selectedPlanId) {
       setErrors({ abonelik: "Lütfen bir abonelik paketi seçin." });
       setStep("abonelik");
+      return;
+    }
+    const odemeErr = validatePayment();
+    if (odemeErr) {
+      setErrors({ abonelik: odemeErr });
+      setStep("odeme");
       return;
     }
 
@@ -131,6 +268,11 @@ export function TerapistKayitForm() {
         abonelik: {
           planId: selectedPlanId,
         },
+        odeme: {
+          method: "card",
+          cardHolder: payment.cardHolder.trim(),
+          cardLast4: payment.cardNumber.replace(/\D/g, "").slice(-4) || null,
+        },
         kayitTarihi: new Date().toISOString(),
       };
 
@@ -143,62 +285,10 @@ export function TerapistKayitForm() {
 
   return (
     <form onSubmit={handleSave} className="space-y-6">
-      <Tabs value={step} className="w-full gap-6" orientation="horizontal">
-        <div className="overflow-x-auto pb-0.5 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <TabsList
-            variant="default"
-            className={cn(
-              "h-auto min-h-12 w-max min-w-full justify-start gap-1 rounded-2xl border border-emerald-100/90 bg-emerald-50/50 p-1.5 shadow-sm sm:min-w-0",
-              "ring-1 ring-emerald-100/40",
-            )}
-          >
-            <TabsTrigger
-              value="temel"
-              onClick={() => setStep("temel")}
-              className={cn(
-                "shrink-0 gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold sm:px-5",
-                "text-muted-foreground shadow-none transition-all duration-200",
-                "hover:text-foreground",
-                "data-active:bg-white data-active:text-primary data-active:shadow-md",
-                "data-active:ring-1 data-active:ring-emerald-200/60",
-                "after:hidden",
-              )}
-            >
-              Temel bilgiler
-            </TabsTrigger>
-            <TabsTrigger
-              value="opsiyonel"
-              onClick={() => setStep("opsiyonel")}
-              className={cn(
-                "shrink-0 gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold sm:px-5",
-                "text-muted-foreground shadow-none transition-all duration-200",
-                "hover:text-foreground",
-                "data-active:bg-white data-active:text-primary data-active:shadow-md",
-                "data-active:ring-1 data-active:ring-emerald-200/60",
-                "after:hidden",
-              )}
-            >
-              Diğer bilgiler (opsiyonel)
-            </TabsTrigger>
-            <TabsTrigger
-              value="abonelik"
-              onClick={() => setStep("abonelik")}
-              className={cn(
-                "shrink-0 gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold sm:px-5",
-                "text-muted-foreground shadow-none transition-all duration-200",
-                "hover:text-foreground",
-                "data-active:bg-white data-active:text-primary data-active:shadow-md",
-                "data-active:ring-1 data-active:ring-emerald-200/60",
-                "after:hidden",
-              )}
-            >
-              Abonelik
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      <Stepper step={step} />
 
-        <TabsContent value="temel" className="mt-0 space-y-6">
-          <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+      {step === "temel" ? (
+        <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-foreground">Temel bilgiler</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Bu alanlar zorunludur. Diğer adımları daha sonra tamamlayabilirsiniz.
@@ -276,10 +366,10 @@ export function TerapistKayitForm() {
               </Button>
             </div>
           </div>
-        </TabsContent>
+      ) : null}
 
-        <TabsContent value="opsiyonel" className="mt-0 space-y-6">
-          <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+      {step === "opsiyonel" ? (
+        <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-foreground">Diğer bilgiler (opsiyonel)</h2>
             <p className="mt-1 text-sm text-muted-foreground">
               Bu alanlar zorunlu değil. Şimdilik atlayabilir, sonra güncelleyebilirsiniz.
@@ -327,14 +417,23 @@ export function TerapistKayitForm() {
               </Button>
             </div>
           </div>
-        </TabsContent>
+      ) : null}
 
-        <TabsContent value="abonelik" className="mt-0 space-y-6">
-          <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+      {step === "abonelik" ? (
+        <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
             <h2 className="text-xl font-semibold text-foreground">Abonelik seçimi</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              İki paketten birini seçin. Kaydet dediğinizde JSON loglanır (mock).
+              Mindely’de <span className="font-medium text-foreground">danışanların sizi ana sayfada ve arama/listelerde görebilmesi</span>{" "}
+              için bir abonelik paketi gerekir. Paket seçmeden kaydı tamamlayabilirsiniz gibi görünse de
+              profiliniz <span className="font-medium text-foreground">yayına alınmaz</span> ve danışanlar sizi keşfedemez.
             </p>
+          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+            <p className="text-sm text-emerald-900">
+              <span className="font-semibold">Önemli:</span> Abonelik seçimi, görünürlük ve randevu
+              kabul akışını aktive eder. Seçtiğiniz paket; görünürlük süresi, panel araçları ve
+              bilgilendirme gibi özellikleri içerir.
+            </p>
+          </div>
 
             <div className="mt-6 grid gap-5 md:grid-cols-2">
               {ABONELIK_PAKETLERI.map((p) => {
@@ -422,18 +521,141 @@ export function TerapistKayitForm() {
                   Geri
                 </Button>
                 <Button
-                  type="submit"
+                  type="button"
                   size="lg"
-                  disabled={loading}
                   className="w-full rounded-xl px-8 sm:w-auto"
+                  onClick={() => {
+                    if (!selectedPlanId) {
+                      setErrors({ abonelik: "Lütfen bir abonelik paketi seçin." });
+                      return;
+                    }
+                    setErrors({});
+                    setStep("odeme");
+                  }}
                 >
-                  {loading ? "Kaydediliyor..." : "Kaydet (JSON logla)"}
+                  Ödemeye geç
                 </Button>
               </div>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+      ) : null}
+
+      {step === "odeme" ? (
+        <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
+          <h2 className="text-xl font-semibold text-foreground">Ödeme</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Bu adım şimdilik mock. Girdiğiniz bilgiler kaydedilmez; yalnızca doğrulama ve akış
+            gösterimi için kullanılır. Ödeme tamamlandığında kayıt JSON’u konsola loglanır.
+          </p>
+
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4">
+            <p className="text-sm text-amber-900">
+              Ödeme tamamlanmadan profiliniz <span className="font-medium">yayına alınmaz</span>.
+              Bu sayede danışanlar, sadece aboneliği aktif uzmanları ana sayfada görür.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="cardHolder">Kart üzerindeki isim</Label>
+              <Input
+                id="cardHolder"
+                value={payment.cardHolder}
+                onChange={(e) => setPayment((p) => ({ ...p, cardHolder: e.target.value }))}
+                className="h-12 rounded-xl"
+                placeholder="Ad Soyad"
+                autoComplete="cc-name"
+              />
+            </div>
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="cardNumber">Kart numarası</Label>
+              <Input
+                id="cardNumber"
+                inputMode="numeric"
+                value={payment.cardNumber}
+                onChange={(e) =>
+                  setPayment((p) => ({
+                    ...p,
+                    cardNumber: formatCardNumber(e.target.value),
+                  }))
+                }
+                className="h-12 rounded-xl"
+                placeholder="0000 0000 0000 0000"
+                autoComplete="cc-number"
+              />
+              <p className="text-xs text-muted-foreground">
+                Kart numarası otomatik formatlanır. Örnek: 4242 4242 4242 4242
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expiry">Son kullanma</Label>
+              <Input
+                id="expiry"
+                value={payment.expiry}
+                onChange={(e) =>
+                  setPayment((p) => ({
+                    ...p,
+                    expiry: formatExpiry(e.target.value),
+                  }))
+                }
+                className="h-12 rounded-xl"
+                placeholder="AA/YY"
+                autoComplete="cc-exp"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="cvc">CVC</Label>
+              <Input
+                id="cvc"
+                inputMode="numeric"
+                value={payment.cvc}
+                onChange={(e) =>
+                  setPayment((p) => ({ ...p, cvc: digitsOnly(e.target.value).slice(0, 4) }))
+                }
+                className="h-12 rounded-xl"
+                placeholder="123"
+                autoComplete="cc-csc"
+              />
+            </div>
+          </div>
+
+          <label className="mt-4 flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-4">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={payment.accept}
+              onChange={(e) => setPayment((p) => ({ ...p, accept: e.target.checked }))}
+            />
+            <span className="text-sm text-muted-foreground">
+              Ödeme koşullarını ve aboneliğin otomatik yenilenebileceğini okudum, kabul ediyorum
+              (mock).
+            </span>
+          </label>
+
+          {errors.abonelik ? (
+            <p className="mt-4 text-sm text-destructive">{errors.abonelik}</p>
+          ) : null}
+
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setStep("abonelik")}
+            >
+              Aboneliğe geri dön
+            </Button>
+            <Button
+              type="submit"
+              size="lg"
+              disabled={loading}
+              className="rounded-xl"
+            >
+              {loading ? "İşleniyor..." : "Ödemeyi tamamla (mock) ve JSON logla"}
+            </Button>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }
