@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock, Settings2, UserRound, Users } from "lucide-react";
+import { CalendarDays, CalendarRange, CreditCard, Settings2, UserRound, Users } from "lucide-react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
@@ -31,9 +31,9 @@ export function PsikologPanelTabTriggers() {
           <Settings2 className="size-4 shrink-0 opacity-80" />
           Genel ayarlar
         </TabsTrigger>
-        <TabsTrigger value="saat-kapatma" className={triggerClass}>
-          <Clock className="size-4 shrink-0 opacity-80" />
-          Saat kapatma
+        <TabsTrigger value="seans-yonetimi" className={triggerClass}>
+          <CalendarRange className="size-4 shrink-0 opacity-80" />
+          Seans Yönetimi
         </TabsTrigger>
         <TabsTrigger value="randevularim" className={triggerClass}>
           <CalendarDays className="size-4 shrink-0 opacity-80" />
@@ -42,6 +42,10 @@ export function PsikologPanelTabTriggers() {
         <TabsTrigger value="danisanlarim" className={triggerClass}>
           <Users className="size-4 shrink-0 opacity-80" />
           Danışanlarım
+        </TabsTrigger>
+        <TabsTrigger value="abonelik" className={triggerClass}>
+          <CreditCard className="size-4 shrink-0 opacity-80" />
+          Abonelik
         </TabsTrigger>
       </TabsList>
     </div>

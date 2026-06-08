@@ -28,8 +28,17 @@ export default function TerapistKayitPage() {
           <div className="rounded-3xl border border-emerald-100 bg-white p-6 shadow-sm sm:p-8">
             <h1 className="text-2xl font-bold text-foreground sm:text-3xl">Terapist Kaydı</h1>
             <p className="mt-2 text-muted-foreground">
-              Dashboard tarzında adımlı kayıt. Ad/soyad/e‑posta/telefon zorunlu; diğer alanlar
-              opsiyonel. Son adımda abonelik seçip kaydedin (JSON loglanır).
+              Önce temel bilgilerinizle hesap oluşturulur; ardından abonelik ekranı (şimdilik örnek)
+              ve e‑posta doğrulaması gelir. Şifre e‑postanıza gönderilir.
+            </p>
+            <p className="mt-3 text-sm text-muted-foreground">
+              Zaten hesabınız var mı?{" "}
+              <Link
+                href="/auth/login?next=/dashboard"
+                className="font-medium text-primary hover:underline"
+              >
+                Giriş yap
+              </Link>
             </p>
 
             <div className="mt-8">

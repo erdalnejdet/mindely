@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { CheckCircle2, Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
   parseMinRezervasyonSaatInput,
@@ -13,15 +15,26 @@ import {
 type PsikologPanelGenelAyarlarTabProps = {
   form: PsikologPanelFormState;
   setForm: React.Dispatch<React.SetStateAction<PsikologPanelFormState>>;
+  onSaveSettings: () => Promise<void>;
+  isSavingSettings: boolean;
+  settingsSaved: boolean;
 };
 
 export function PsikologPanelGenelAyarlarTab({
   form,
   setForm,
+  onSaveSettings,
+  isSavingSettings,
+  settingsSaved,
 }: PsikologPanelGenelAyarlarTabProps) {
   const minRezervasyonParsed = parseMinRezervasyonSaatInput(
     form.genelAyarlar.minRezervasyonSaat,
   );
+
+  const isValid =
+    !form.genelAyarlar.aktifSeansAlma ||
+    form.genelAyarlar.minRezervasyonSaat.trim() === "" ||
+    minRezervasyonParsed !== null;
 
   return (
     <div className="mx-auto max-w-2xl">
@@ -42,7 +55,7 @@ export function PsikologPanelGenelAyarlarTab({
                   ...p,
                   genelAyarlar: {
                     ...p.genelAyarlar,
-                    aktifSeansAlma: checked,
+                    aktifSeansAlma: !!checked,
                   },
                 }))
               }
@@ -101,11 +114,28 @@ export function PsikologPanelGenelAyarlarTab({
               </p>
             ) : null}
           </div>
+
+          <div className="flex items-center gap-3 border-t border-emerald-100 pt-4">
+            <Button
+              type="button"
+              className="rounded-xl"
+              disabled={isSavingSettings || !isValid}
+              onClick={onSaveSettings}
+            >
+              {isSavingSettings ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : null}
+              Kaydet
+            </Button>
+            {settingsSaved && (
+              <span className="flex items-center gap-1.5 text-sm text-emerald-600">
+                <CheckCircle2 className="h-4 w-4" />
+                Kaydedildi
+              </span>
+            )}
+          </div>
         </div>
       </div>
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        Değişiklikleri kaydetmek için üstteki &quot;Mock kaydet (JSON)&quot; düğmesini kullanın.
-      </p>
     </div>
   );
 }

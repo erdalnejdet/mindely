@@ -3,7 +3,12 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Leaf, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { Leaf, Mail, Lock, User, ArrowRight, Eye, EyeOff } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { apiUrl } from "@/lib/api-client";
+import { messageFromApiErrorJson } from "@/lib/api-error-message";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -27,9 +32,6 @@ function GoogleIcon({ className }: { className?: string }) {
     </svg>
   );
 }
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 export default function RegisterPage() {
   const [firstName, setFirstName] = useState("");
@@ -40,6 +42,8 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,11 +53,31 @@ export default function RegisterPage() {
       return;
     }
     setLoading(true);
-    setTimeout(() => {
-      setError("Kayit sistemi su anda devre disi.");
+    try {
+      const res = await fetch(apiUrl("/api/auth/register"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email,
+          password,
+          firstName,
+          lastName,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(
+          messageFromApiErrorJson(data, "Kayıt tamamlanamadı. Bilgilerinizi kontrol edin."),
+        );
+        return;
+      }
+      setRegistered(true);
+    } catch {
+      setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally {
       setLoading(false);
-      setRegistered(false);
-    }, 300);
+    }
   };
 
   const handleGoogleRegister = () => {
@@ -142,7 +166,7 @@ export default function RegisterPage() {
           {registered ? (
             <div className="space-y-4 rounded-lg bg-primary/10 p-4">
               <p className="text-sm text-foreground">
-                Kayıt başarılı! E-posta adresinize doğrulama linki gönderildi. Giriş yapmak için e-postanızı doğrulayın.
+                Kayıt başarılı. Giriş sayfasından hesabınızla oturum açabilirsiniz.
               </p>
               <Link href="/auth/login" className="block">
                 <Button className="w-full">Giriş sayfasına git</Button>
@@ -205,14 +229,28 @@ export default function RegisterPage() {
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="En az 8 karakter"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="h-12 rounded-xl pl-12"
+                  className="h-12 rounded-xl pl-12 pr-12"
                   required
                   minLength={8}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Şifreyi gizle" : "Şifreyi göster"}
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" aria-hidden />
+                  ) : (
+                    <Eye className="h-5 w-5" aria-hidden />
+                  )}
+                </Button>
               </div>
             </div>
 
@@ -222,14 +260,30 @@ export default function RegisterPage() {
                 <Lock className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="confirmPassword"
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   placeholder="Şifrenizi tekrar girin"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-12 rounded-xl pl-12"
+                  className="h-12 rounded-xl pl-12 pr-12"
                   required
                   minLength={8}
                 />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 h-9 w-9 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={
+                    showConfirmPassword ? "Şifre tekrarını gizle" : "Şifre tekrarını göster"
+                  }
+                  onClick={() => setShowConfirmPassword((v) => !v)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5" aria-hidden />
+                  ) : (
+                    <Eye className="h-5 w-5" aria-hidden />
+                  )}
+                </Button>
               </div>
             </div>
 
@@ -245,6 +299,16 @@ export default function RegisterPage() {
           )}
 
           <p className="mt-8 text-center text-sm text-muted-foreground">
+            Psikolog musunuz?{" "}
+            <Link
+              href="/terapist-islemleri/kayit"
+              className="font-medium text-primary hover:underline"
+            >
+              Terapist kaydı
+            </Link>
+          </p>
+
+          <p className="mt-4 text-center text-sm text-muted-foreground">
             Zaten hesabınız var mı?{" "}
             <Link
               href="/auth/login"

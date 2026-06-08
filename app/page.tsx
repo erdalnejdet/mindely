@@ -1,4 +1,3 @@
-import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import {
   HeroSection,
@@ -40,7 +39,6 @@ export const metadata = {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
-      <Header />
       <main>
         <HeroSection />
         <StatCards />

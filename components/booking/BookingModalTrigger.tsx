@@ -4,16 +4,18 @@ import { useState } from "react";
 import { Calendar, Video } from "lucide-react";
 import { buttonVariants } from "@/lib/button-variants";
 import { cn } from "@/lib/utils";
-import { BookingSection } from "@/components/booking/BookingSection";
+import { BookingSection, type PsikologData } from "@/components/booking/BookingSection";
 
 type BookingModalTriggerProps = {
   psikologId: string;
+  psikologData?: PsikologData;
   initialOpen?: boolean;
   triggerMode?: "single" | "double";
 };
 
 export function BookingModalTrigger({
   psikologId,
+  psikologData,
   initialOpen = false,
   triggerMode = "double",
 }: BookingModalTriggerProps) {
@@ -54,7 +56,7 @@ export function BookingModalTrigger({
       {open && (
         <div className="fixed inset-0 z-50 bg-black/50 p-4 sm:p-8">
           <div className="mx-auto max-h-full max-w-5xl overflow-y-auto">
-            <BookingSection fixedPsikologId={psikologId} onClose={() => setOpen(false)} />
+            <BookingSection fixedPsikologId={psikologId} psikologData={psikologData} onClose={() => setOpen(false)} />
           </div>
         </div>
       )}

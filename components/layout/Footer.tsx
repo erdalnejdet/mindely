@@ -5,9 +5,9 @@ const footerLinks = {
   quickAccess: [
     { href: "/dashboard", label: "Panel" },
     { href: "/psikologlar", label: "Psikologlar" },
-    { href: "/psikologlar", label: "Randevu Al" },
+    { href: "/psikologlar#randevu", label: "Randevu Al" },
     { href: "/tests", label: "Psikolojik Testler" },
-    { href: "/terapist-islemleri", label: "Terapist Islemleri" },
+    { href: "/terapist-islemleri", label: "Terapist İşlemleri" },
   ],
   corporate: [
     { href: "/hakkimizda", label: "Hakkımızda" },
@@ -61,7 +61,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground">Hızlı Erişim</h3>
             <ul className="mt-4 space-y-3">
               {footerLinks.quickAccess.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -77,7 +77,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground">Kurumsal</h3>
             <ul className="mt-4 space-y-3">
               {footerLinks.corporate.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-sm text-muted-foreground transition-colors hover:text-primary"
@@ -93,7 +93,7 @@ export function Footer() {
             <h3 className="text-sm font-semibold text-foreground">Yardım</h3>
             <ul className="mt-4 space-y-3">
               {footerLinks.help.map((link) => (
-                <li key={link.href}>
+                <li key={link.label}>
                   <Link
                     href={link.href}
                     className="text-sm text-muted-foreground transition-colors hover:text-primary"

@@ -3,10 +3,16 @@
 import * as React from "react";
 import Image from "next/image";
 import {
-  Calendar,
+  BookOpen,
+  Camera,
   CheckCircle2,
-  Code2,
+  GraduationCap,
+  Loader2,
   Plus,
+  Star,
+  Tag,
+  Trash2,
+  User,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,435 +26,400 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import type { PsikologPanelFormState } from "@/lib/panel-profile";
-import { parseSessionPriceInput } from "@/lib/panel-profile";
-import { demoRandevular } from "./constants";
 
 type PsikologPanelProfilTabProps = {
   form: PsikologPanelFormState;
   setForm: React.Dispatch<React.SetStateAction<PsikologPanelFormState>>;
-  onMockSave: () => void;
-  jsonPreview: string | null;
+  onSave: () => Promise<void>;
+  isSaving: boolean;
+  saved: boolean;
+  onAvatarUpload: (file: File) => Promise<void>;
+  isUploadingAvatar: boolean;
 };
 
-const MAX_PROFILE_IMAGE_BYTES = 3 * 1024 * 1024;
+const MAX_PROFILE_IMAGE_BYTES = 5 * 1024 * 1024;
+
+// ─── Section wrapper ─────────────────────────────────────────────────────────
+function Section({
+  icon,
+  title,
+  description,
+  children,
+  action,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-emerald-100 bg-white shadow-sm">
+      <div className="flex items-start justify-between gap-4 border-b border-emerald-50 px-6 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+            {icon}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-foreground">{title}</p>
+            {description && <p className="text-xs text-muted-foreground">{description}</p>}
+          </div>
+        </div>
+        {action}
+      </div>
+      <div className="px-6 py-5">{children}</div>
+    </div>
+  );
+}
 
 export function PsikologPanelProfilTab({
   form,
   setForm,
-  onMockSave,
-  jsonPreview,
+  onSave,
+  isSaving,
+  saved,
+  onAvatarUpload,
+  isUploadingAvatar,
 }: PsikologPanelProfilTabProps) {
   const [specModalOpen, setSpecModalOpen] = React.useState(false);
-  const [specDraft, setSpecDraft] = React.useState("");
+  const [specDrafts, setSpecDrafts] = React.useState<string[]>([""]);
+  const specInputRefs = React.useRef<(HTMLInputElement | null)[]>([]);
   const [imageFileError, setImageFileError] = React.useState<string | null>(null);
   const imageFileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const priceDisplay = parseSessionPriceInput(form.sessionPrice);
+  // ── Spec modal ──────────────────────────────────────────────────────────────
+  const openSpecModal = () => { setSpecDrafts([""]); setSpecModalOpen(true); };
+  const onSpecModalOpenChange = (open: boolean) => { setSpecModalOpen(open); if (!open) setSpecDrafts([""]); };
 
-  const onSpecModalOpenChange = (open: boolean) => {
-    setSpecModalOpen(open);
-    if (!open) setSpecDraft("");
+  const addDraftRow = () => {
+    setSpecDrafts((p) => [...p, ""]);
+    setTimeout(() => { specInputRefs.current[specDrafts.length]?.focus(); }, 30);
   };
 
-  const confirmAddSpecialization = () => {
-    const t = specDraft.trim();
-    if (!t) return;
+  const confirmAddSpecializations = () => {
+    const valid = specDrafts.map((s) => s.trim()).filter(Boolean);
+    if (!valid.length) return;
     setForm((p) => ({
       ...p,
-      specializations: [...p.specializations, t],
+      specializations: [...p.specializations, ...valid.filter((v) => !p.specializations.includes(v))],
     }));
-    setSpecDraft("");
-    setSpecModalOpen(false);
+    setSpecDrafts([""]); setSpecModalOpen(false);
   };
 
-  const openSpecModal = () => {
-    setSpecDraft("");
-    setSpecModalOpen(true);
-  };
-
-  const removeSpecialization = (index: number) => {
-    setForm((p) => ({
-      ...p,
-      specializations: p.specializations.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateSpecialization = (index: number, value: string) => {
+  // ── Education ───────────────────────────────────────────────────────────────
+  const addEducationRow = () => {
     setForm((p) => {
-      const next = [...p.specializations];
-      next[index] = value;
-      return { ...p, specializations: next };
+      const last = p.educationExperience[p.educationExperience.length - 1];
+      if (last && !last.title.trim() && !last.subtitle.trim()) return p;
+      return { ...p, educationExperience: [...p.educationExperience, { title: "", subtitle: "" }] };
     });
   };
 
-  const addEducationRow = () => {
-    setForm((p) => ({
-      ...p,
-      educationExperience: [...p.educationExperience, { title: "", subtitle: "" }],
-    }));
-  };
-
-  const removeEducationRow = (index: number) => {
-    setForm((p) => ({
-      ...p,
-      educationExperience: p.educationExperience.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateEducationRow = (
-    index: number,
-    field: "title" | "subtitle",
-    value: string,
-  ) => {
+  const updateEducationRow = (index: number, field: "title" | "subtitle", value: string) => {
     setForm((p) => {
       const next = [...p.educationExperience];
-      const row = next[index];
-      if (!row) return p;
+      const row = next[index]; if (!row) return p;
       next[index] = { ...row, [field]: value };
       return { ...p, educationExperience: next };
     });
   };
 
-  const onProfileImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ── Avatar ──────────────────────────────────────────────────────────────────
+  const onProfileImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setImageFileError(null);
     const file = e.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setImageFileError("Lütfen bir görsel dosyası seçin (JPG, PNG, WebP vb.).");
-      e.target.value = "";
-      return;
-    }
-    if (file.size > MAX_PROFILE_IMAGE_BYTES) {
-      setImageFileError("Görsel en fazla 3 MB olabilir.");
-      e.target.value = "";
-      return;
-    }
+    if (!file.type.startsWith("image/")) { setImageFileError("Görsel dosyası seçin (JPG, PNG, WebP)."); e.target.value = ""; return; }
+    if (file.size > MAX_PROFILE_IMAGE_BYTES) { setImageFileError("Görsel en fazla 5 MB olabilir."); e.target.value = ""; return; }
     const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = reader.result;
-      if (typeof dataUrl === "string") {
-        setForm((p) => ({ ...p, image: dataUrl }));
-      }
-    };
+    reader.onload = () => { if (typeof reader.result === "string") setForm((p) => ({ ...p, image: reader.result as string })); };
     reader.readAsDataURL(file);
-  };
-
-  const clearProfileImage = () => {
-    setImageFileError(null);
-    setForm((p) => ({ ...p, image: "" }));
-    if (imageFileInputRef.current) imageFileInputRef.current.value = "";
+    try { await onAvatarUpload(file); } catch { setImageFileError("Fotoğraf yüklenemedi."); }
+    e.target.value = "";
   };
 
   return (
-    <section className="grid gap-8 lg:grid-cols-[1fr_340px]">
-      <div className="space-y-8">
-        <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
-          <h2 className="text-2xl font-semibold text-foreground">Genel bilgiler</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ad, unvan, fotoğraf ve hakkımda metni.
-          </p>
-          <div className="mt-6 grid gap-5">
-            <div className="space-y-2">
-              <Label htmlFor="panel-name">Ad soyad / unvan</Label>
-              <Input
-                id="panel-name"
-                value={form.name}
-                onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                className="h-12 rounded-xl"
-                placeholder="Örn. Uzm. Psk. Ad Soyad"
-                autoComplete="name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="panel-spec-title">Meslek unvanı</Label>
-              <Input
-                id="panel-spec-title"
-                value={form.specialization}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, specialization: e.target.value }))
-                }
-                className="h-12 rounded-xl"
-                placeholder="Örn. Klinik Psikolog"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="panel-image-file">Profil fotoğrafı</Label>
-              <p className="text-sm text-muted-foreground">
-                Bilgisayarınızdan görsel yükleyin. Önizleme üstteki kartta güncellenir.
-              </p>
-              <input
-                ref={imageFileInputRef}
-                id="panel-image-file"
-                type="file"
-                accept="image/jpeg,image/png,image/webp,image/gif"
-                className="sr-only"
-                onChange={onProfileImageFileChange}
-              />
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="rounded-xl"
-                  onClick={() => imageFileInputRef.current?.click()}
-                >
-                  Dosya seç
-                </Button>
-                {form.image ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="rounded-xl"
-                    onClick={clearProfileImage}
-                  >
-                    Görseli kaldır
-                  </Button>
-                ) : null}
-                {form.image ? (
-                  <div className="relative size-14 overflow-hidden rounded-xl border border-emerald-100 shadow-sm">
-                    <Image
-                      src={form.image}
-                      alt=""
-                      fill
-                      className="object-cover"
-                      unoptimized
-                    />
-                  </div>
-                ) : null}
+    <div className="space-y-6">
+
+      {/* ── 1. Kimlik kartı ─────────────────────────────────────────────────── */}
+      <Section icon={<User className="h-5 w-5" />} title="Kimlik bilgileri" description="Danışanların profilinizde göreceği temel bilgiler">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
+          {/* Avatar */}
+          <div className="flex flex-col items-center gap-2">
+            <button
+              type="button"
+              disabled={isUploadingAvatar}
+              onClick={() => imageFileInputRef.current?.click()}
+              className={cn(
+                "group relative h-28 w-28 overflow-hidden rounded-2xl border-2 border-emerald-100 bg-emerald-50 transition-opacity",
+                isUploadingAvatar && "opacity-60",
+              )}
+              aria-label="Fotoğraf değiştir"
+            >
+              {form.image ? (
+                <Image src={form.image} alt="Profil" fill className="object-cover" unoptimized />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-emerald-200">
+                  <User className="h-12 w-12" />
+                </div>
+              )}
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+                {isUploadingAvatar
+                  ? <Loader2 className="h-5 w-5 animate-spin text-white" />
+                  : <Camera className="h-5 w-5 text-white" />}
+                <span className="text-[10px] font-medium text-white">
+                  {isUploadingAvatar ? "Yükleniyor" : "Değiştir"}
+                </span>
               </div>
-              {imageFileError ? (
-                <p className="text-sm text-destructive">{imageFileError}</p>
-              ) : null}
+            </button>
+            {form.image && (
+              <button
+                type="button"
+                onClick={() => { setImageFileError(null); setForm((p) => ({ ...p, image: "" })); }}
+                className="text-xs text-muted-foreground hover:text-destructive"
+              >
+                Kaldır
+              </button>
+            )}
+            {imageFileError && <p className="max-w-[7rem] text-center text-xs text-destructive">{imageFileError}</p>}
+            <input ref={imageFileInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/gif" className="sr-only" onChange={onProfileImageFileChange} />
+          </div>
+
+          {/* Ad + unvan + bio */}
+          <div className="flex-1 space-y-4">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="panel-name" className="text-xs font-medium">Ad soyad</Label>
+                <Input
+                  id="panel-name"
+                  value={form.name}
+                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                  className="h-11 rounded-xl"
+                  placeholder="Uzm. Psk. Ad Soyad"
+                  autoComplete="name"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="panel-title" className="text-xs font-medium">Meslek unvanı</Label>
+                <Input
+                  id="panel-title"
+                  value={form.specialization}
+                  onChange={(e) => setForm((p) => ({ ...p, specialization: e.target.value }))}
+                  className="h-11 rounded-xl"
+                  placeholder="Klinik Psikolog"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="panel-bio">Hakkımda</Label>
+            <div className="space-y-1.5">
+              <Label htmlFor="panel-bio" className="text-xs font-medium">Hakkımda</Label>
               <textarea
                 id="panel-bio"
                 value={form.bio}
                 onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
-                className="min-h-[140px] w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                placeholder="Kendinizi tanıtın."
+                rows={4}
+                className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/60 focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                placeholder="Yaklaşımınızı, uzmanlık alanlarınızı ve danışanlarınıza nasıl destek olduğunuzu kısaca anlatın…"
               />
+              <p className="text-right text-xs text-muted-foreground">{form.bio.length} / 5000</p>
             </div>
           </div>
         </div>
+      </Section>
 
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Uzmanlık alanları</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ekle ile açılan pencereden yeni etiket girin; listede düzenleyip çöp kutusuyla
-            kaldırabilirsiniz.
-          </p>
-          <div className="mt-4 space-y-3">
-            {form.specializations.map((alan, index) => (
-              <div
-                key={`${index}-${alan}`}
-                className="flex gap-2 rounded-xl border border-emerald-100 bg-white p-3 shadow-sm"
+      {/* ── 2. Seans ücreti ─────────────────────────────────────────────────── */}
+      <Section icon={<Star className="h-5 w-5" />} title="Seans ücreti" description="Danışanlarınıza gösterilen ücret">
+        <div className="flex items-center gap-4">
+          <div className="relative w-44">
+            <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">₺</span>
+            <Input
+              id="panel-price"
+              inputMode="numeric"
+              value={form.sessionPrice}
+              onChange={(e) => setForm((p) => ({ ...p, sessionPrice: e.target.value.replace(/\D/g, "") }))}
+              className="h-12 rounded-xl pl-8 text-lg font-semibold"
+              placeholder="1200"
+            />
+          </div>
+          <span className="text-sm text-muted-foreground">/ seans</span>
+          {form.sessionPrice && (
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-medium text-emerald-800">
+              ₺{Number(form.sessionPrice).toLocaleString("tr-TR")}
+            </span>
+          )}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Ücret alanı yakında canlı profile yansıyacak.</p>
+      </Section>
+
+      {/* ── 3. Uzmanlık alanları ────────────────────────────────────────────── */}
+      <Section
+        icon={<Tag className="h-5 w-5" />}
+        title="Uzmanlık alanları"
+        description="Profilinizde etiket olarak görünür"
+        action={
+          <Button type="button" size="sm" variant="outline" className="rounded-xl" onClick={openSpecModal}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Ekle
+          </Button>
+        }
+      >
+        {form.specializations.length === 0 ? (
+          <button
+            type="button"
+            onClick={openSpecModal}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-emerald-200 py-6 text-sm text-muted-foreground transition-colors hover:border-emerald-400 hover:text-emerald-700"
+          >
+            <Plus className="h-4 w-4" />
+            Uzmanlık alanı ekle
+          </button>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {form.specializations.map((alan, i) => (
+              <span
+                key={`${i}-${alan}`}
+                className="group flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 py-1.5 pl-3.5 pr-2 text-sm font-medium text-emerald-800"
               >
-                <Input
-                  value={alan}
-                  onChange={(e) => updateSpecialization(index, e.target.value)}
-                  className="h-11 flex-1 rounded-xl border-0 bg-transparent shadow-none focus-visible:ring-0"
-                  placeholder="Uzmanlık adı"
-                />
-                <Button
+                {alan}
+                <button
                   type="button"
-                  variant="outline"
-                  size="icon"
-                  className="shrink-0 rounded-xl"
-                  onClick={() => removeSpecialization(index)}
+                  onClick={() => setForm((p) => ({ ...p, specializations: p.specializations.filter((_, idx) => idx !== i) }))}
+                  className="flex h-4 w-4 items-center justify-center rounded-full text-emerald-500 transition-colors hover:bg-emerald-200 hover:text-emerald-900"
                   aria-label="Kaldır"
                 >
-                  <X className="h-4 w-4" />
-                </Button>
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+            <button
+              type="button"
+              onClick={openSpecModal}
+              className="flex items-center gap-1.5 rounded-full border border-dashed border-emerald-300 px-3.5 py-1.5 text-sm text-muted-foreground transition-colors hover:border-emerald-500 hover:text-emerald-700"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Ekle
+            </button>
+          </div>
+        )}
+      </Section>
+
+      {/* ── 4. Eğitim & Deneyim ─────────────────────────────────────────────── */}
+      <Section
+        icon={<GraduationCap className="h-5 w-5" />}
+        title="Eğitim ve deneyim"
+        description="Okul, sertifika, kurs gibi bilgileri ekleyin"
+        action={
+          <Button type="button" size="sm" variant="outline" className="rounded-xl" onClick={addEducationRow}>
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Satır ekle
+          </Button>
+        }
+      >
+        {form.educationExperience.length === 0 ? (
+          <button
+            type="button"
+            onClick={addEducationRow}
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-emerald-200 py-6 text-sm text-muted-foreground transition-colors hover:border-emerald-400 hover:text-emerald-700"
+          >
+            <Plus className="h-4 w-4" />
+            İlk kaydı ekle
+          </button>
+        ) : (
+          <div className="space-y-3">
+            {form.educationExperience.map((row, index) => (
+              <div
+                key={index}
+                className="flex items-start gap-3 rounded-xl border border-emerald-50 bg-emerald-50/40 p-4"
+              >
+                <BookOpen className="mt-3 h-4 w-4 shrink-0 text-emerald-500" />
+                <div className="flex-1 space-y-2">
+                  <Input
+                    value={row.title}
+                    onChange={(e) => updateEducationRow(index, "title", e.target.value)}
+                    className="h-10 rounded-lg border-0 bg-white/80 shadow-none focus-visible:ring-1"
+                    placeholder="Üniversite veya kurum adı"
+                  />
+                  <Input
+                    value={row.subtitle}
+                    onChange={(e) => updateEducationRow(index, "subtitle", e.target.value)}
+                    className="h-10 rounded-lg border-0 bg-white/80 shadow-none focus-visible:ring-1 text-sm"
+                    placeholder="Bölüm, derece veya kısa açıklama"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setForm((p) => ({ ...p, educationExperience: p.educationExperience.filter((_, i) => i !== index) }))}
+                  className="mt-2 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-destructive"
+                  aria-label="Kaldır"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
             ))}
-            <Button type="button" variant="secondary" className="rounded-xl" onClick={openSpecModal}>
-              <Plus className="mr-2 h-4 w-4" />
-              Ekle
-            </Button>
           </div>
-        </div>
+        )}
+      </Section>
 
-        <Dialog open={specModalOpen} onOpenChange={onSpecModalOpenChange}>
-          <DialogContent className="rounded-2xl sm:max-w-md" showCloseButton>
-            <DialogHeader>
-              <DialogTitle>Uzmanlık alanı ekle</DialogTitle>
-              <DialogDescription>
-                Örneğin Anksiyete, Depresyon veya kendi ifadeniz. Kayıt sonrası listede
-                düzenleyebilirsiniz.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-2 py-1">
-              <Label htmlFor="spec-modal-input">Alan adı</Label>
-              <Input
-                id="spec-modal-input"
-                value={specDraft}
-                onChange={(e) => setSpecDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    confirmAddSpecialization();
-                  }
-                }}
-                className="h-12 rounded-xl"
-                placeholder="Örn. Anksiyete"
-                autoFocus
-              />
-            </div>
-            <DialogFooter className="border-t-0 bg-transparent p-0 sm:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                className="rounded-xl"
-                onClick={() => onSpecModalOpenChange(false)}
-              >
-                İptal
-              </Button>
-              <Button type="button" className="rounded-xl" onClick={confirmAddSpecialization}>
-                Listeye ekle
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        <div className="rounded-2xl border border-emerald-100 bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h2 className="text-2xl font-semibold text-foreground">Eğitim ve deneyim</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Satır ekleyip çıkarın; her satır başlık + kısa açıklama (API’ye JSON gider).
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="shrink-0 rounded-xl"
-              onClick={addEducationRow}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Satır ekle
-            </Button>
-          </div>
-          <ul className="mt-6 space-y-6">
-            {form.educationExperience.map((row, index) => (
-              <li key={index} className="flex gap-3">
-                <CheckCircle2 className="mt-2 h-5 w-5 shrink-0 text-emerald-600" />
-                <div className="min-w-0 flex-1 space-y-3 rounded-xl border border-emerald-50 bg-emerald-50/30 p-4">
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 text-destructive hover:text-destructive"
-                      onClick={() => removeEducationRow(index)}
-                    >
-                      <X className="mr-1 h-4 w-4" />
-                      Kaldır
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`edu-title-${index}`}>Başlık</Label>
-                    <Input
-                      id={`edu-title-${index}`}
-                      value={row.title}
-                      onChange={(e) => updateEducationRow(index, "title", e.target.value)}
-                      className="h-11 rounded-xl"
-                      placeholder="Örn. İstanbul Üniversitesi - Klinik Psikoloji YL"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor={`edu-sub-${index}`}>Açıklama</Label>
-                    <Input
-                      id={`edu-sub-${index}`}
-                      value={row.subtitle}
-                      onChange={(e) => updateEducationRow(index, "subtitle", e.target.value)}
-                      className="h-11 rounded-xl"
-                      placeholder="Örn. Akademik uzmanlık eğitimi"
-                    />
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-          {form.educationExperience.length === 0 ? (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Henüz satır yok. &quot;Satır ekle&quot; ile başlayın.
-            </p>
-          ) : null}
-        </div>
-
-        <Button type="button" className="rounded-xl" size="lg" onClick={onMockSave}>
-          <Code2 className="mr-2 h-4 w-4" />
-          Mock kaydet — JSON güncelle
-        </Button>
-
-        {jsonPreview ? (
-          <div className="rounded-2xl border border-emerald-200 bg-white p-4 shadow-sm">
-            <p className="text-sm font-medium text-foreground">Gönderilecek JSON (mock)</p>
-            <pre className="mt-3 max-h-[420px] overflow-auto rounded-xl bg-muted/50 p-4 text-xs leading-relaxed whitespace-pre-wrap break-all">
-              {jsonPreview}
-            </pre>
-          </div>
-        ) : null}
-      </div>
-
-      <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-        <div className="overflow-hidden rounded-2xl border border-emerald-100 bg-white shadow-sm">
-          <div className="bg-primary px-5 py-4 text-primary-foreground">
-            <p className="text-sm/5">Seans ücreti</p>
-            <div className="mt-1 flex items-end gap-2">
-              <span className="text-4xl font-bold">
-                {priceDisplay != null ? `₺${priceDisplay}` : "—"}
-              </span>
-              <span className="mb-1 text-sm opacity-90">/50 dk</span>
-            </div>
-          </div>
-          <div className="p-5">
-            <div className="space-y-2">
-              <Label htmlFor="panel-price">Ücret (₺)</Label>
-              <Input
-                id="panel-price"
-                inputMode="numeric"
-                value={form.sessionPrice}
-                onChange={(e) =>
-                  setForm((p) => ({ ...p, sessionPrice: e.target.value }))
-                }
-                className="h-12 rounded-xl"
-                placeholder="800"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-emerald-100 bg-white p-5 shadow-sm">
-          <h3 className="text-lg font-semibold text-foreground">Yaklaşan randevular</h3>
-          <p className="mt-1 text-sm text-muted-foreground">Örnek veri — canlıda takvimden gelir.</p>
-          <ul className="mt-4 divide-y divide-emerald-100">
-            {demoRandevular.map((r) => (
-              <li
-                key={`${r.tarih}-${r.saat}`}
-                className="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-50 text-emerald-700">
-                    <Calendar className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{r.tarih}</p>
-                    <p className="text-xs text-muted-foreground">{r.saat}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-muted-foreground">{r.danisan}</span>
-              </li>
-            ))}
-          </ul>
-          <Button variant="outline" className="mt-4 w-full rounded-xl" disabled>
-            Takvimi yönet
+      {/* ── Kaydet ──────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between rounded-2xl border border-emerald-100 bg-white px-6 py-4 shadow-sm">
+        <p className="text-sm text-muted-foreground">
+          Kimlik, unvan ve biyografi bilgileri <span className="font-medium text-foreground">Kaydet</span> ile kaydedilir.
+        </p>
+        <div className="flex items-center gap-3">
+          {saved && (
+            <span className="flex items-center gap-1.5 text-sm text-emerald-600">
+              <CheckCircle2 className="h-4 w-4" />
+              Kaydedildi
+            </span>
+          )}
+          <Button type="button" className="rounded-xl px-6" disabled={isSaving} onClick={onSave}>
+            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Kaydet
           </Button>
         </div>
-      </aside>
-    </section>
+      </div>
+
+      {/* ── Uzmanlık Modal ──────────────────────────────────────────────────── */}
+      <Dialog open={specModalOpen} onOpenChange={onSpecModalOpenChange}>
+        <DialogContent className="rounded-2xl sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Uzmanlık alanları ekle</DialogTitle>
+            <DialogDescription>
+              Her satıra bir uzmanlık yazın. Enter ile hızlıca yeni satır açabilirsiniz.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-72 space-y-2 overflow-y-auto py-1 pr-1">
+            {specDrafts.map((draft, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input
+                  ref={(el) => { specInputRefs.current[i] = el; }}
+                  value={draft}
+                  onChange={(e) => setSpecDrafts((p) => { const n = [...p]; n[i] = e.target.value; return n; })}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (draft.trim()) addDraftRow(); } }}
+                  className="h-11 flex-1 rounded-xl"
+                  placeholder={i === 0 ? "Örn. Anksiyete" : "Örn. Depresyon"}
+                  autoFocus={i === 0}
+                />
+                {specDrafts.length > 1 && (
+                  <Button type="button" variant="ghost" size="icon" className="shrink-0 rounded-xl text-muted-foreground hover:text-destructive" onClick={() => setSpecDrafts((p) => p.filter((_, idx) => idx !== i))}>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+          <Button type="button" variant="outline" size="sm" className="w-full rounded-xl border-dashed" onClick={addDraftRow}>
+            <Plus className="mr-2 h-4 w-4" />
+            Satır ekle
+          </Button>
+          <DialogFooter className="border-t border-border/40 pt-4 sm:justify-end">
+            <Button type="button" variant="outline" className="rounded-xl" onClick={() => onSpecModalOpenChange(false)}>İptal</Button>
+            <Button type="button" className="rounded-xl" disabled={specDrafts.every((s) => !s.trim())} onClick={confirmAddSpecializations}>
+              Listeye ekle ({specDrafts.filter((s) => s.trim()).length})
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Clock, Code2, Plus, X } from "lucide-react";
+import { Clock, Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -18,7 +18,8 @@ import { HAFTA_GUNLERI, panelNativeSelectClass, YARIM_SAAT_ARALIKLARI } from "./
 
 type PsikologPanelSaatKapatmaTabProps = {
   kapaliAraliklar: KapaliSaatAraligi[];
-  onRemoveKapali: (id: string) => void;
+  isLoading: boolean;
+  onRemoveKapali: (id: string) => Promise<void>;
   onOpenAddModal: () => void;
   kapaliModalOpen: boolean;
   onKapaliModalOpenChange: (open: boolean) => void;
@@ -28,13 +29,14 @@ type PsikologPanelSaatKapatmaTabProps = {
   onKapaliBasChange: (bas: string) => void;
   kapaliBit: string;
   onKapaliBitChange: (bit: string) => void;
-  onConfirmKapali: () => void;
-  saatJsonPreview: string | null;
-  onMockSave: () => void;
+  onConfirmKapali: () => Promise<void>;
+  removingId: string | null;
+  isSaving: boolean;
 };
 
 export function PsikologPanelSaatKapatmaTab({
   kapaliAraliklar,
+  isLoading,
   onRemoveKapali,
   onOpenAddModal,
   kapaliModalOpen,
@@ -46,8 +48,8 @@ export function PsikologPanelSaatKapatmaTab({
   kapaliBit,
   onKapaliBitChange,
   onConfirmKapali,
-  saatJsonPreview,
-  onMockSave,
+  removingId,
+  isSaving,
 }: PsikologPanelSaatKapatmaTabProps) {
   const bitisSaatSecenekleri = React.useMemo(
     () => YARIM_SAAT_ARALIKLARI.filter((t) => t > kapaliBas),
@@ -84,8 +86,8 @@ export function PsikologPanelSaatKapatmaTab({
           <div>
             <h2 className="text-2xl font-semibold text-foreground">Saat kapatma</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              Haftanın belirli günlerinde randevu alınamayan saat aralıklarını tanımlayın. Bu sekme
-              yalnızca sizde görünür; canlıda takvim servisi ile eşleştirilecek.
+              Haftanın belirli günlerinde randevu alınamayan saat aralıklarını tanımlayın.
+              Değişiklikler anında kaydedilir.
             </p>
           </div>
           <Button
@@ -93,13 +95,19 @@ export function PsikologPanelSaatKapatmaTab({
             variant="secondary"
             className="shrink-0 rounded-xl"
             onClick={onOpenAddModal}
+            disabled={isLoading}
           >
             <Plus className="mr-2 h-4 w-4" />
             Kapalı aralık ekle
           </Button>
         </div>
 
-        {kapaliAraliklar.length === 0 ? (
+        {isLoading ? (
+          <div className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Yükleniyor…
+          </div>
+        ) : kapaliAraliklar.length === 0 ? (
           <p className="mt-8 text-sm text-muted-foreground">
             Henüz kapalı saat yok. &quot;Kapalı aralık ekle&quot; ile başlayın.
           </p>
@@ -126,32 +134,20 @@ export function PsikologPanelSaatKapatmaTab({
                   variant="outline"
                   size="sm"
                   className="rounded-xl text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  disabled={removingId === row.id}
                   onClick={() => onRemoveKapali(row.id)}
                 >
-                  <X className="mr-1 h-4 w-4" />
+                  {removingId === row.id ? (
+                    <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+                  ) : (
+                    <X className="mr-1 h-4 w-4" />
+                  )}
                   Kaldır
                 </Button>
               </li>
             ))}
           </ul>
         )}
-
-        <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-emerald-100 pt-6">
-          <Button type="button" className="rounded-xl" onClick={onMockSave}>
-            <Code2 className="mr-2 h-4 w-4" />
-            Mock kaydet (JSON)
-          </Button>
-          <p className="text-sm text-muted-foreground">Örnek veri — tarayıcıda kalıcı kayıt yok.</p>
-        </div>
-
-        {saatJsonPreview ? (
-          <div className="mt-6 rounded-2xl border border-emerald-200 bg-muted/30 p-4">
-            <p className="text-sm font-medium text-foreground">Gönderilecek JSON (kapalı saatler)</p>
-            <pre className="mt-3 max-h-[320px] overflow-auto rounded-xl bg-background p-4 text-xs leading-relaxed whitespace-pre-wrap break-all ring-1 ring-emerald-100">
-              {saatJsonPreview}
-            </pre>
-          </div>
-        ) : null}
       </div>
 
       <Dialog open={kapaliModalOpen} onOpenChange={onKapaliModalOpenChange}>
@@ -165,7 +161,7 @@ export function PsikologPanelSaatKapatmaTab({
           <DialogHeader className="space-y-1.5 pr-7 text-left">
             <DialogTitle className="text-base">Kapalı saat aralığı</DialogTitle>
             <DialogDescription className="text-xs leading-snug sm:text-sm">
-              Seçtiğiniz günde bu saatler arasında yeni randevu oluşturulamaz (mock).
+              Seçtiğiniz günde bu saatler arasında yeni randevu oluşturulamaz.
             </DialogDescription>
           </DialogHeader>
 
@@ -254,6 +250,7 @@ export function PsikologPanelSaatKapatmaTab({
               variant="outline"
               size="sm"
               className="rounded-xl"
+              disabled={isSaving}
               onClick={() => onKapaliModalOpenChange(false)}
             >
               İptal
@@ -263,6 +260,7 @@ export function PsikologPanelSaatKapatmaTab({
               size="sm"
               className="rounded-xl"
               disabled={
+                isSaving ||
                 !kapaliBas ||
                 !kapaliBit ||
                 kapaliBit <= kapaliBas ||
@@ -270,7 +268,8 @@ export function PsikologPanelSaatKapatmaTab({
               }
               onClick={onConfirmKapali}
             >
-              Listeye ekle
+              {isSaving ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : null}
+              Kaydet
             </Button>
           </DialogFooter>
         </DialogContent>

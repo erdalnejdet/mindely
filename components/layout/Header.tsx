@@ -5,7 +5,7 @@ import { Leaf, Menu, LogOut, User } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
-import { getUser, logout } from "@/lib/auth";
+import { fetchSession, logout, type SessionUser } from "@/lib/auth";
 
 const navLinks = [
   { href: "/", label: "Anasayfa" },
@@ -17,14 +17,24 @@ const navLinks = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
   useEffect(() => {
-    queueMicrotask(() => setUser(getUser()));
+    let cancelled = false;
+    fetchSession().then((u) => {
+      if (!cancelled) {
+        setUser(u);
+        setSessionLoading(false);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     setUser(null);
     setMobileMenuOpen(false);
     window.location.href = "/";
@@ -41,7 +51,7 @@ export function Header() {
         <div className="hidden items-center gap-8 md:flex">
           {navLinks.map((link) => (
             <Link
-              key={link.href}
+              key={`desktop-${link.href}`}
               href={link.href}
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
@@ -51,17 +61,21 @@ export function Header() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
-          {user ? (
+          {sessionLoading ? (
+            <span className="text-sm text-muted-foreground">…</span>
+          ) : user ? (
             <>
-              <Link
-                href="/dashboard"
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-              >
-                Panel
-              </Link>
+              {(user.role === "psychologist" || user.role === "admin") && (
+                <Link
+                  href="/dashboard"
+                  className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  Panel
+                </Link>
+              )}
               <span className="flex items-center gap-2 text-sm text-muted-foreground">
                 <User className="h-4 w-4" />
-                {user.name}
+                {user.name || user.email}
               </span>
               <Button variant="outline" size="sm" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
@@ -76,10 +90,7 @@ export function Header() {
               >
                 Giriş Yap
               </Link>
-              <Link
-                href="/auth/register"
-                className={cn(buttonVariants())}
-              >
+              <Link href="/auth/register" className={cn(buttonVariants())}>
                 Kayıt Ol
               </Link>
             </>
@@ -99,20 +110,21 @@ export function Header() {
 
       {mobileMenuOpen && (
         <div className="overflow-hidden border-t border-border/40 bg-background md:hidden">
-            <div className="flex flex-col gap-2 px-4 py-4">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.label}
-                </Link>
-              ))}
-              <div className="mt-4 flex flex-col gap-2">
-                {user ? (
-                  <>
+          <div className="flex flex-col gap-2 px-4 py-4">
+            {navLinks.map((link) => (
+              <Link
+                key={`mobile-${link.href}`}
+                href={link.href}
+                className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                {link.label}
+              </Link>
+            ))}
+            <div className="mt-4 flex flex-col gap-2">
+              {sessionLoading ? null : user ? (
+                <>
+                  {(user.role === "psychologist" || user.role === "admin") && (
                     <Link
                       href="/dashboard"
                       className="rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -120,38 +132,35 @@ export function Header() {
                     >
                       Panel
                     </Link>
-                    <p className="px-3 py-2 text-sm text-muted-foreground">
-                      {user.name}
-                    </p>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleLogout}
-                    >
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Çıkış Yap
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      href="/auth/login"
-                      className={cn(buttonVariants({ variant: "outline" }), "flex-1 justify-center")}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Giriş Yap
-                    </Link>
-                    <Link
-                      href="/auth/register"
-                      className={cn(buttonVariants(), "flex-1 justify-center")}
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      Kayıt Ol
-                    </Link>
-                  </>
-                )}
-              </div>
+                  )}
+                  <p className="px-3 py-2 text-sm text-muted-foreground">
+                    {user.name || user.email}
+                  </p>
+                  <Button variant="outline" className="w-full" onClick={handleLogout}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Çıkış Yap
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/auth/login"
+                    className={cn(buttonVariants({ variant: "outline" }), "flex-1 justify-center")}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Giriş Yap
+                  </Link>
+                  <Link
+                    href="/auth/register"
+                    className={cn(buttonVariants(), "flex-1 justify-center")}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Kayıt Ol
+                  </Link>
+                </>
+              )}
             </div>
+          </div>
         </div>
       )}
     </header>

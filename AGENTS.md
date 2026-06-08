@@ -37,7 +37,9 @@ Frontend:
 
 Authentication:
 
-* NextAuth.js
+* Signed JWT access + refresh tokens issued by the Express app in `backend/` (`mindely-backend`, HS256). Next.js App Router BFF (`app/api/auth/*`) stores tokens in httpOnly cookies (`mindely_at`, `mindely_rt`), verifies JWTs server-side (`jose`), and proxies auth to the API.
+
+Backend taban URL (BFF / sunucu kodu): `lib/api-url.ts` — `MINDELY_API_URL` → `BACKEND_API_URL` → `NEXT_PUBLIC_API_URL`. Tarayici BFF: `lib/api-client.ts` — `apiUrl("/api/...")` (`NEXT_PUBLIC_APP_URL` opsiyonel). Sabit `http://localhost:…` kullanma.
 
 Icons:
 

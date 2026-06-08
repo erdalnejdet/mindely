@@ -4,43 +4,49 @@ import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Leaf } from "lucide-react";
-import { setToken, setUser } from "@/lib/auth";
+import { apiUrl } from "@/lib/api-client";
 
 function AuthCallbackContent() {
   const searchParams = useSearchParams();
-  const [status] = useState<"loading" | "error">(() => {
-    const access = searchParams.get("access");
-    const token = searchParams.get("token") || access;
-    const userParam = searchParams.get("user");
-
-    if (!token || !userParam) return "error";
-    try {
-      JSON.parse(decodeURIComponent(userParam));
-      return "loading";
-    } catch {
-      return "error";
-    }
-  });
+  const [status, setStatus] = useState<"loading" | "error">("loading");
 
   useEffect(() => {
-    if (status === "error") return;
-
     const access = searchParams.get("access");
     const token = searchParams.get("token") || access;
-    const userParam = searchParams.get("user");
+    const refresh = searchParams.get("refresh");
 
-    if (token && userParam) {
-      try {
-        const user = JSON.parse(decodeURIComponent(userParam));
-        setToken(token);
-        setUser({
-          ...user,
-          name: [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email,
-        });
-        window.location.href = "/";
-      } catch {}
+    if (!token) {
+      queueMicrotask(() => setStatus("error"));
+      return;
     }
-  }, [searchParams, status]);
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(apiUrl("/api/auth/oauth-sync"), {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            accessToken: token,
+            refreshToken: refresh || undefined,
+          }),
+        });
+        if (cancelled) return;
+        if (!res.ok) {
+          setStatus("error");
+          return;
+        }
+        window.location.href = "/";
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6">
@@ -60,12 +66,9 @@ function AuthCallbackContent() {
         <div className="text-center max-w-sm">
           <p className="text-destructive font-medium mb-2">Giriş başarısız</p>
           <p className="text-muted-foreground text-sm mb-6">
-            Google ile giriş sırasında bir hata oluştu. Lütfen tekrar deneyin.
+            Oturum doğrulanamadı. Lütfen tekrar deneyin.
           </p>
-          <Link
-            href="/auth/login"
-            className="text-primary font-medium hover:underline"
-          >
+          <Link href="/auth/login" className="text-primary font-medium hover:underline">
             Giriş sayfasına dön
           </Link>
         </div>

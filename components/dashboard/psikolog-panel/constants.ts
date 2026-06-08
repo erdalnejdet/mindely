@@ -8,6 +8,24 @@ export const HAFTA_GUNLERI = [
   "Pazar",
 ] as const;
 
+export type HaftaGunu = (typeof HAFTA_GUNLERI)[number];
+
+/** Türkçe gün adı → JS dayOfWeek (0 = Pazar, 1 = Pazartesi, …) */
+export const GUN_TO_DOW: Record<HaftaGunu, number> = {
+  Pazartesi: 1,
+  Salı: 2,
+  Çarşamba: 3,
+  Perşembe: 4,
+  Cuma: 5,
+  Cumartesi: 6,
+  Pazar: 0,
+};
+
+/** JS dayOfWeek → Türkçe gün adı */
+export const DOW_TO_GUN: Record<number, HaftaGunu> = Object.fromEntries(
+  Object.entries(GUN_TO_DOW).map(([gun, dow]) => [dow, gun as HaftaGunu]),
+) as Record<number, HaftaGunu>;
+
 /** 30 dk adımlar, 06:00–23:00 (bitiş seçiminde başlangıçtan sonraki slotlar kullanılır) */
 export const YARIM_SAAT_ARALIKLARI: string[] = (() => {
   const out: string[] = [];

@@ -69,6 +69,8 @@ const benefits = [
   },
 ];
 
+const therapistLoginHref = "/auth/login?next=/dashboard";
+
 export default function TerapistIslemleriPage() {
   return (
     <PageLayout>
@@ -82,12 +84,18 @@ export default function TerapistIslemleriPage() {
               Önce temel bilgilerinizle üye olun. Paket ve uzman profili
               adımlarını hesabınız açıldıktan sonra tamamlayabilirsiniz.
             </p>
-            <div className="mt-10">
+            <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/terapist-islemleri/kayit"
-                className="inline-flex items-center justify-center rounded-xl bg-primary px-8 py-3.5 text-base font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
+                className="inline-flex items-center rounded-xl bg-primary px-6 py-3 font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
               >
-                Üye Ol
+                Üye ol
+              </Link>
+              <Link
+                href={therapistLoginHref}
+                className="inline-flex items-center rounded-xl border-2 border-primary px-6 py-3 font-medium text-primary hover:bg-primary/5"
+              >
+                Giriş yap
               </Link>
             </div>
           </div>
@@ -124,12 +132,20 @@ export default function TerapistIslemleriPage() {
             sonrası uzman profilinizi, belgelerinizi ve abonelik tercihinizi
             panel üzerinden tamamlayabilirsiniz.
           </p>
-          <Link
-            href="/terapist-islemleri/kayit"
-            className="mt-6 inline-flex items-center rounded-xl border-2 border-primary px-6 py-3 font-medium text-primary hover:bg-primary/5"
-          >
-            Hemen Üye Ol
-          </Link>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href="/terapist-islemleri/kayit"
+              className="inline-flex items-center rounded-xl bg-primary px-6 py-3 font-medium text-primary-foreground shadow-sm hover:bg-primary/90"
+            >
+              Üye ol
+            </Link>
+            <Link
+              href={therapistLoginHref}
+              className="inline-flex items-center rounded-xl border-2 border-primary px-6 py-3 font-medium text-primary hover:bg-primary/5"
+            >
+              Giriş yap
+            </Link>
+          </div>
         </div>
       </div>
     </PageLayout>

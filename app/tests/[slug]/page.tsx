@@ -1,11 +1,25 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { buttonVariants } from "@/lib/button-variants";
-import { ArrowLeft } from "lucide-react";
-import { TESTS } from "@/lib/data/tests";
-import { TestStartModal } from "@/components/tests/TestStartModal";
+import { backendApiUrl } from "@/lib/api-url";
+import { TestRunner } from "@/components/tests/TestRunner";
+import type { TestDefinition } from "@/lib/data/tests";
+
+type DbTest = TestDefinition & { id: string; isActive: boolean };
+
+async function fetchTest(slug: string): Promise<DbTest | null> {
+  try {
+    const res = await fetch(`${backendApiUrl()}/tests/${slug}`, { next: { revalidate: 60 } });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { test: DbTest };
+    return data.test ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function generateMetadata({
   params,
@@ -13,12 +27,9 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const test = TESTS[slug];
+  const test = await fetchTest(slug);
   if (!test) return { title: "Test Bulunamadı" };
-  return {
-    title: test.title,
-    description: test.description,
-  };
+  return { title: test.title, description: test.description };
 }
 
 export default async function TestDetailPage({
@@ -27,49 +38,25 @@ export default async function TestDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const test = TESTS[slug];
-
+  const test = await fetchTest(slug);
   if (!test) notFound();
 
   return (
     <PageLayout>
-      <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6 lg:px-8">
-        <Link
-          href="/tests"
-          className={`${buttonVariants({ variant: "ghost" })} mb-8`}
-        >
+      <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6">
+        <Link href="/tests" className={`${buttonVariants({ variant: "ghost" })} mb-6 -ml-3`}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Testlere Dön
         </Link>
-
-        <div className="rounded-2xl bg-white p-8 shadow-lg">
-          <h1 className="text-2xl font-bold text-foreground sm:text-3xl">
-            {test.title}
-          </h1>
-          <p className="mt-4 text-muted-foreground">{test.description}</p>
-
-          <div className="mt-8 flex gap-6 rounded-xl bg-emerald-50 p-6">
-            <div>
-              <p className="text-sm text-muted-foreground">Soru Sayısı</p>
-              <p className="text-xl font-bold text-primary">
-                {test.questionCount} soru
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Süre</p>
-              <p className="text-xl font-bold text-primary">{test.duration}</p>
-            </div>
+        <div className="rounded-2xl bg-white p-6 shadow-sm border border-emerald-100 sm:p-8">
+          <div className="mb-6">
+            <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">
+              {test.category}
+            </span>
+            <h1 className="mt-3 text-2xl font-bold text-foreground sm:text-3xl">{test.title}</h1>
+            <p className="mt-2 text-muted-foreground">{test.description}</p>
           </div>
-
-          <div className="mt-8 rounded-xl border border-border p-6">
-            <p className="text-sm text-muted-foreground">
-              Bu test profesyonel değerlendirme amaçlıdır. Sonuçlar tedavi
-              yerine geçmez. Detaylı destek için bir uzmanla görüşmenizi
-              öneririz.
-            </p>
-          </div>
-
-          <TestStartModal slug={slug} />
+          <TestRunner test={test} />
         </div>
       </div>
     </PageLayout>
